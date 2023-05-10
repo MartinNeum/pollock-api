@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const Poll = require('../src/Poll')
+const Token = require('../src/Token')
 const fs = require('fs');
 const pollsFilePath = './data/polls.json';
 
@@ -25,9 +26,12 @@ router.get('/', (req, res) => {
 });
 
 
+/** #################################################### **/
 /** ################ POLLLACK ENDPOINTS ################ **/
+/** #################################################### **/
 
-// POST /poll/lack
+
+/** ### POST /poll/lack ### */
 router.post('/lack', (req, res) => {
 
   try {
@@ -35,25 +39,40 @@ router.post('/lack', (req, res) => {
     // Request body in variablen abspeichern
     const { title, description, options, setting, fixed } = req.body;
 
-    // Prüfen, ob alle Felder geliefert wurden
-    if (title == null || description == null || options == null || setting == null || fixed == null) {
+    // PollBody erstellen
+    const pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline)
+
+    const pollOptions = []
+    options.forEach(option => {
+      if (option.id == null || option.text == null) {
+        console.error('\nERROR bei POST /poll/lack:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.')
+        res.status(405).json({ "code": 405, "message": "Invalid input" })
+        return
+      } else {
+        const pollOption = new Poll.PollOption(option.id, option.text)
+        pollOptions.push(pollOption)
+      }
+    });
+
+    const pollFixed = fixed
+
+    let pollBody;
+    if (title == null || pollOptions == null) {
       console.error('\nERROR bei POST /poll/lack:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.')
       res.status(405).json({ "code": 405, "message": "Invalid input" })
       return
+    } else {
+      pollBody = new Poll.PollBody(title, description, pollOptions, pollSetting, pollFixed)
     }
 
-    // Generiere token
-    const token = new Date().getTime()
+    // PollSecurity erstellen
+    const pollSecurity = null
 
-    // Poll mit gelieferten Daten erstellen
-    const poll = {
-      title,
-      description,
-      options,
-      setting,
-      fixed,
-      token
-    };
+    // PollShare (Token) erstellen
+    const pollShare = new Token(null, new Date().getTime())
+
+    // Poll erstellen
+    const poll = new Poll.Poll(pollBody, pollSecurity, pollShare)
 
     // polls.json bearbeiten
     fs.readFile(pollsFilePath, 'utf8', (err, data) => {
@@ -85,7 +104,7 @@ router.post('/lack', (req, res) => {
           },
           "share": {
             "link": "string",
-            "value": poll.token
+            "value": poll.share.value
           }
         });
       });

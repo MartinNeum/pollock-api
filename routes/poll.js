@@ -101,10 +101,17 @@ router.post('/lack', (req, res) => {
 
 });
 
-/**### POST /poll/lack/:token ###*/
+/**### GET /poll/lack/:token ###*/
 router.get('/lack/:token', (req, res) => {
 
   const token = req.params.token;
+
+  // Check token
+  if(token == ':token' || token == null) {
+    console.error('Fehler beim Lesen der Datei:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+    return;
+  }
 
   // Polls lesen
   fs.readFile(pollsFilePath, 'utf8', (err, data) => {
@@ -125,6 +132,65 @@ router.get('/lack/:token', (req, res) => {
     }
 
     res.json(poll);
+  });
+
+});
+
+/**### PUT /poll/lack/:token ###*/
+router.put('/lack/:token', (req, res) => {
+
+  // Token holen
+  const token = req.params.token;
+
+  // Request body in variablen abspeichern
+  const { title, description, options, setting, fixed } = req.body;
+  
+  // Check token
+  if(token == ':token' || token == null) {
+    console.error('ERROR bei PUT /poll/lack/:token: Kein Token geliefert.');
+    res.status(405).json({ error: 'ERROR bei PUT /poll/lack/:token: Kein Token geliefert.' });
+    return;
+  }
+
+  // Polls lesen
+  fs.readFile(pollsFilePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Fehler beim Lesen der Datei:', err);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+
+    const polls = JSON.parse(data);
+
+    // Polls nach token durchsuchen
+    let pollIndex = polls.findIndex(p => p.share.value == token);
+
+    // Poll bearbeiten
+    if (pollIndex != -1) {
+      polls[pollIndex].body.title = title
+      polls[pollIndex].body.description = description
+      polls[pollIndex].body.options = options
+      polls[pollIndex].body.setting = setting
+      polls[pollIndex].body.fixed = fixed
+    } else {
+      console.error('Fehler beim Bearbeiten des Polls: ', err)
+      res.status(404).json({ code: 500, error: 'Fehler beim Bearbeiten des Polls.' });
+      return;
+    }
+
+    try {
+
+      fs.writeFileSync(pollsFilePath, JSON.stringify(polls, null, 2), 'utf8');
+      res.json({ "code": 200, "message": "i. O." });
+
+    } catch (err) {
+
+      console.error('\nERROR bei PUT /poll/lack/:token\n ', error)
+      res.status(500).json({ error: 'PUT /poll/lack/:token schlug fehl' })
+      
+    }
+
+
   });
 
 });

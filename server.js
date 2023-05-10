@@ -4,10 +4,9 @@ const port = 3000;
 
 app.use(express.json());
 
-// Definiere Routen
-app.get('/', (req, res) => {
-  res.send('Willkommen bei meiner API!');
-});
+// Routen importieren
+const routes = require('./routes');
+app.use('/', routes);
 
 // Starte den Server
 app.listen(port, () => {

@@ -190,6 +190,52 @@ router.put('/lack/:token', (req, res) => {
       
     }
 
+  });
+
+});
+
+/**### DELETE /poll/lack/:token ###*/
+router.delete('/lack/:token', (req, res) => {
+
+  // Token holen
+  const token = req.params.token;
+
+  // Check token
+  if(token == ':token' || token == null) {
+    console.error('ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.');
+    res.status(405).json({ error: 'ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.' });
+    return;
+  }
+
+  // Polls lesen
+  fs.readFile(pollsFilePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Fehler beim Lesen der Datei:', err);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+
+    const polls = JSON.parse(data);
+
+    // Polls nach token durchsuchen
+    const updatedPolls = polls.filter(p => p.share.value != token);
+
+    console.log(updatedPolls)
+
+    try {
+
+      if (updatedPolls.length < polls.length) {
+        fs.writeFileSync(pollsFilePath, JSON.stringify(updatedPolls, null, 2), 'utf8');
+        res.json({ "code": 200, "message": "i. O." });
+      } else {
+        console.error('\nERROR bei DELETE /poll/lack/:token: Schreiben des neuen Arrays schlug fehl.');
+        res.status(500).json({ error: 'ERROR bei DELETE /poll/lack/:token: Schreiben des neuen Arrays schlug fehl.' });
+      }
+
+    } catch (err) {
+      console.error('\nERROR bei DELETE /poll/lack/:token:\n', err);
+      res.status(500).json({ error: 'ERROR bei DELETE /poll/lack/:token.' });
+    }
 
   });
 

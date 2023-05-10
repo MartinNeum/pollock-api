@@ -7,31 +7,12 @@ const fs = require('fs');
 const pollsFilePath = './data/polls.json';
 
 
-// GET /poll
-router.get('/', (req, res) => {
-
-  try {
-
-    const data = fs.readFileSync(pollsFilePath, 'utf8');
-    const polls = JSON.parse(data)
-    res.json(polls)
-
-  } catch (error) {
-
-    console.error('\nERROR bei GET /poll:\n', error)
-    res.status(500).json({ error: 'GET /poll schlug fehl' })
-    
-  }
-
-});
-
-
 /** #################################################### **/
 /** ################ POLLLACK ENDPOINTS ################ **/
 /** #################################################### **/
 
 
-/** ### POST /poll/lack ### */
+/**### POST /poll/lack ###*/
 router.post('/lack', (req, res) => {
 
   try {
@@ -120,7 +101,7 @@ router.post('/lack', (req, res) => {
 
 });
 
-// GET /poll/lack/{token}
+/**### POST /poll/lack/:token ###*/
 router.get('/lack/:token', (req, res) => {
 
   const token = req.params.token;
@@ -136,10 +117,10 @@ router.get('/lack/:token', (req, res) => {
     const polls = JSON.parse(data);
 
     // Polls nach token durchsuchen
-    const poll = polls.find(p => p.token == token);
+    const poll = polls.find(p => p.share.value == token);
 
     if (!poll) {
-      res.status(404).json({ code: 404, error: 'Poll not found' });
+      res.status(404).json({ code: 404, error: 'Poll not found.' });
       return;
     }
 

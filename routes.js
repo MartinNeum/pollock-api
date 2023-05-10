@@ -3,7 +3,7 @@ const router = express.Router();
 
 // Logik für alle Routen
 router.use((req, res, next) => {
-  console.log('Eine Anfrage wurde empfangen.');
+  // console.log('Eine Anfrage wurde empfangen.');
   next();
 });
 

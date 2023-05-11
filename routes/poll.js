@@ -13,6 +13,7 @@ const pollsFilePath = './data/polls.json';
 
 
 /**### POST /poll/lack ###*/
+/**Add a new poll.**/
 router.post('/lack', (req, res) => {
 
   try {
@@ -102,6 +103,7 @@ router.post('/lack', (req, res) => {
 });
 
 /**### GET /poll/lack/:token ###*/
+/**Return the statistics of the poll by share token.**/
 router.get('/lack/:token', (req, res) => {
 
   const token = req.params.token;
@@ -137,6 +139,7 @@ router.get('/lack/:token', (req, res) => {
 });
 
 /**### PUT /poll/lack/:token ###*/
+/**Update a poll by admin token.**/
 router.put('/lack/:token', (req, res) => {
 
   // Token holen
@@ -195,6 +198,7 @@ router.put('/lack/:token', (req, res) => {
 });
 
 /**### DELETE /poll/lack/:token ###*/
+/**Deletes a poll by admin token.**/
 router.delete('/lack/:token', (req, res) => {
 
   // Token holen
@@ -238,7 +242,6 @@ router.delete('/lack/:token', (req, res) => {
     }
 
   });
-
 });
 
 module.exports = router;

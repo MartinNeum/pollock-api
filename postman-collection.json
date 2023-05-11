@@ -1,0 +1,124 @@
+{
+	"info": {
+		"_postman_id": "ccec3610-ed5c-4240-9439-22be9f5e95a3",
+		"name": "Pollock",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "/poll/lack",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"TITLE 3\",\r\n  \"description\": \"Description 3\",\r\n  \"options\": [\r\n    {\r\n      \"id\": 0,\r\n      \"text\": \"string\"\r\n    },\r\n    {\r\n      \"id\": 0,\r\n      \"text\": \"string\"\r\n    }\r\n  ],\r\n  \"setting\": {\r\n    \"voices\": 1,\r\n    \"worst\": false,\r\n    \"deadline\": \"2023-05-29T19:21:39+02:00\"\r\n  },\r\n  \"fixed\": [\r\n    0\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/poll/lack",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"poll",
+						"lack"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/poll/lack/:token",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/poll/lack/:token",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"poll",
+						"lack",
+						":token"
+					],
+					"variable": [
+						{
+							"key": "token",
+							"value": "1683728272980"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/poll/lack/:token",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"title\": \"TITLE 11111111111\",\r\n  \"description\": \"Description 11111111\",\r\n  \"options\": [\r\n    {\r\n      \"id\": 0,\r\n      \"text\": \"string\"\r\n    },\r\n    {\r\n      \"id\": 0,\r\n      \"text\": \"string\"\r\n    }\r\n  ],\r\n  \"setting\": {\r\n    \"voices\": 1,\r\n    \"worst\": false,\r\n    \"deadline\": \"2023-05-29T19:21:39+02:00\"\r\n  },\r\n  \"fixed\": [\r\n    0\r\n  ]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "localhost:3000/poll/lack/:token",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"poll",
+						"lack",
+						":token"
+					],
+					"variable": [
+						{
+							"key": "token",
+							"value": "1683727615913"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/poll/lack/:token",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "localhost:3000/poll/lack/:token",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"poll",
+						"lack",
+						":token"
+					],
+					"variable": [
+						{
+							"key": "token",
+							"value": "1683728272980"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

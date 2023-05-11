@@ -20,4 +20,12 @@ router.use('/user', userRoute);
 const pollRoute = require('./routes/poll');
 router.use('/poll', pollRoute);
 
+// Vote Route
+const voteRoute = require('./routes/vote');
+router.use('/vote', voteRoute);
+
+// Lack Route
+const lackRoute = require('./routes/lack');
+router.use('/lack', lackRoute);
+
 module.exports = router;

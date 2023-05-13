@@ -24,8 +24,7 @@ class PollOption {
 }
 
 class PollResult {
-    constructor(description, admin, share) {
-        this.description = description
+    constructor(admin, share) {
         this.admin = admin
         this.share = share
     }

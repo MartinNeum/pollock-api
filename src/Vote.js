@@ -21,8 +21,7 @@ class VoteInfo {
 }
 
 class VoteResult {
-    constructor(decription, edit) {
-        this.decription = decription
+    constructor(edit) {
         this.edit = edit
     }
 }

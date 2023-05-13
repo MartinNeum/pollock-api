@@ -1,5 +1,1 @@
-[
-    { "id": 1, "name": "Benutzer 1" },
-    { "id": 2, "name": "Benutzer 2" },
-    { "id": 3, "name": "Benutzer 3" }
-]
+[{"name":"olli","lock":"123"},{"name":"martin","lock":"123"},{"name":"alfred","lock":"133333"}]

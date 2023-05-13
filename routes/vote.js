@@ -42,7 +42,7 @@ router.post('/lack/:token', (req, res) => {
                 voteChoices.push(voteChoice);
             }
         });
-        console.log("2");
+
         // Neues Vote Objekt
         const vote = new Vote(user, voteChoices);
 
@@ -53,7 +53,6 @@ router.post('/lack/:token', (req, res) => {
                 return;
             }
         });
-        console.log("2.1");
         //############################# Poll lesen ###############################################
         fs.readFile(pollsFilePath, 'utf8', (err, data) => {
             if (err) {
@@ -61,7 +60,7 @@ router.post('/lack/:token', (req, res) => {
                 res.status(404).json({ error: 'Poll not found.' });
                 return;
             }
-            console.log("2.2");
+
             const polls = JSON.parse(data);
 
             // Polls nach token durchsuchen
@@ -71,14 +70,14 @@ router.post('/lack/:token', (req, res) => {
                 res.status(404).json({ code: 404, error: 'Poll not found.' });
                 return;
             }
-            console.log("2.3");
+
             if (poll.deadline < timeStamp)
             {
                 console.log("ERROR: Deadline ended");
                 res.status(410).json({ code: 404, error: 'Poll is gone.' });
                 return;
             }
-            console.log("3");
+
             //############################# Vote Info Obj. erstellen + Speichern ###############################################
             const voteInfo = new VoteInfo(poll,vote, timeStamp);
 

@@ -9,20 +9,16 @@ const usersFilePath = './data/users.json';
 /**### POST /user ###*/
 /**Add a new user.**/
 router.post('', (req, res) => {
-
   try {
-
     // Request body in variablen abspeichern
     const { name, password } = req.body;
 
-    // PollBody erstellen
-    const user = new User(name, password)
+    const user = new User(name, password);
 
-    // users.json bearbeiten
     fs.readFile(usersFilePath, 'utf8', (err, data) => {
       if (err) {
         console.error('\nERROR bei POST /user. Fehler beim Lesen der Datei:\n', err)
-        res.status(404).json({ error: 'Poll not found.' })
+        res.status(404).json({ error: 'Poll not found.' });
         return;
       }
 
@@ -37,22 +33,18 @@ router.post('', (req, res) => {
       fs.writeFile(usersFilePath, JSON.stringify(users), 'utf8', (err) => {
         if (err) {
           console.error('\nERROR bei POST /users. Fehler beim Schreiben der Datei:\n', err);
-          res.status(404).json({ error: 'Poll not found.' })
+          res.status(404).json({ error: 'Poll not found.' });
           return;
         }
 
         res.status(200).json(user.name);
       });
-
     });
-
   } catch (error) {
 
-    console.error('\nERROR bei POST /user:\n ', error)
-    res.status(404).json({ error: 'Poll not found.' })
-
+    console.error('\nERROR bei POST /user:\n ', error);
+    res.status(404).json({ error: 'Poll not found.' });
   }
-
 });
 
 // /user/{username}
@@ -76,7 +68,7 @@ router.get('/:username', (req, res) => {
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
-    res.status(404).json({ error: 'Poll not found.' })
+    res.status(404).json({ error: 'Poll not found.' });
   }
 });
 

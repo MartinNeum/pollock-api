@@ -140,28 +140,34 @@ router.get('/lack/:token', (req, res) => {
                 return;
             }
 
-            const votes = JSON.parse(data);
-            console.log(votes);
+            const voteInfos = JSON.parse(data);
+           // console.log(voteInfos);
+            const votes = [];
             // Votes nach token durchsuchen
-            // TODO Pfad anpassen
-            const vote = votes.find(v => v.poll.share.value == token);
-            if (!vote) {
-                console.log("ERROR: Find Poll failed");
-                res.status(404).json({ code: 404, error: 'Poll not found.' });
-                return;
-            }
-            // Verfügbarkeit der Poll prüfen
-            const timeStamp = generateTimestamp();
-            // TODO Pfad anpassen
-            if (vote.poll.body.setting.deadline < timeStamp)
-            {
-                console.log("ERROR: Deadline ended");
-                res.status(410).json({ code: 410, error: 'Poll is gone.' });
-                return;
-            }
+            voteInfos.forEach(voteInfos => {
+                if (voteInfos == null) {
+                    console.log("ERROR: Read VoteInfos failed");
+                    res.status(405).json({ "code": 405, "message": "Invalid input" });
+                    return;
+                } else {
+                    if(voteInfos.poll.share.value == token){
+                        // Verfügbarkeit der Poll prüfen
+                        const timeStamp = generateTimestamp();
+                        if (voteInfos.poll.body.setting.deadline < timeStamp)
+                        {
+                            console.log("ERROR: Deadline ended");
+                            res.status(410).json({ code: 410, error: 'Poll is gone.' });
+                            return;
+                        }
+                        votes.push(voteInfos);
+                    }
+
+                }
+            });
+
 
             //############################# Response erstellen ###############################################
-            res.status(200).json(vote);
+            res.status(200).json(votes);
         });
         //############################################################################
 

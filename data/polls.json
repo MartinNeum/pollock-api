@@ -27,5 +27,34 @@
       "link": null,
       "value": 1683794570403
     }
+  },
+  {
+    "body": {
+      "title": "Was ist das für eine Frage?",
+      "description": "ich habe hunger",
+      "options": [
+        {
+          "id": 1,
+          "text": "na"
+        },
+        {
+          "id": 2,
+          "text": "nein"
+        }
+      ],
+      "setting": {
+        "voices": 1,
+        "worst": false,
+        "deadline": "2023-05-29T19:21:39+02:00"
+      },
+      "fixed": [
+        0
+      ]
+    },
+    "security": null,
+    "share": {
+      "link": null,
+      "value": 1684068026078
+    }
   }
 ]

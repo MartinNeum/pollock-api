@@ -130,5 +130,49 @@
       ]
     },
     "time": "2023-05-14T13:16:25+02:00"
+  },
+  {
+    "poll": {
+      "body": {
+        "title": "Was ist das für eine Frage?",
+        "description": "ich habe hunger",
+        "options": [
+          {
+            "id": 1,
+            "text": "na"
+          },
+          {
+            "id": 2,
+            "text": "nein"
+          }
+        ],
+        "setting": {
+          "voices": 1,
+          "worst": false,
+          "deadline": "2023-05-29T19:21:39+02:00"
+        },
+        "fixed": [
+          0
+        ]
+      },
+      "security": null,
+      "share": {
+        "link": null,
+        "value": 1684068026078
+      }
+    },
+    "vote": {
+      "owner": {
+        "name": "alfred",
+        "lock": true
+      },
+      "choice": [
+        {
+          "id": 1,
+          "worst": false
+        }
+      ]
+    },
+    "time": "2023-05-14T14:41:19+02:00"
   }
 ]

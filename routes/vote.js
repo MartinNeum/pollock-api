@@ -144,7 +144,7 @@ router.get('/lack/:token', (req, res) => {
             console.log(votes);
             // Votes nach token durchsuchen
             // TODO Pfad anpassen
-            const vote = votes.find(v => v.share.value == token);
+            const vote = votes.find(v => v.poll.share.value == token);
             if (!vote) {
                 console.log("ERROR: Find Poll failed");
                 res.status(404).json({ code: 404, error: 'Poll not found.' });
@@ -153,7 +153,7 @@ router.get('/lack/:token', (req, res) => {
             // Verfügbarkeit der Poll prüfen
             const timeStamp = generateTimestamp();
             // TODO Pfad anpassen
-            if (vote.body.setting.deadline < timeStamp)
+            if (vote.poll.body.setting.deadline < timeStamp)
             {
                 console.log("ERROR: Deadline ended");
                 res.status(410).json({ code: 410, error: 'Poll is gone.' });

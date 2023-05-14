@@ -45,14 +45,6 @@ router.post('/lack/:token', (req, res) => {
 
         // Neues Vote Objekt
         const vote = new Vote(user, voteChoices);
-
-        fs.readFile(votesFilePath, 'utf8', (err, data) => {
-            if (err) {
-                console.log("ERROR: Read Votes failed");
-                res.status(404).json({ error: 'Poll not found.' });
-                return;
-            }
-        });
         //############################# Poll lesen ###############################################
         fs.readFile(pollsFilePath, 'utf8', (err, data) => {
             if (err) {
@@ -80,23 +72,33 @@ router.post('/lack/:token', (req, res) => {
 
             //############################# Vote Info Obj. erstellen + Speichern ###############################################
             const voteInfo = new VoteInfo(poll,vote, timeStamp);
-
-            // Vote in votes-array hinzufügen
             let voteInfos = [];
-            if (data) {
-                voteInfos = JSON.parse(data);
-            }
-            voteInfos.push(voteInfo);
 
-            // Votes in .json abspeichern
-            fs.writeFile(votesFilePath, JSON.stringify(voteInfos), 'utf8', (err) => {
+            fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
                 if (err) {
-                    console.log("ERROR: Write PollInfo failed");
+                    console.log("ERROR: Read Votes failed");
                     res.status(404).json({ error: 'Poll not found.' });
                     return;
                 }
-            });
 
+                // Vote in votes-array hinzufügen
+                if(voteData){
+                        console.log(voteData);
+                        voteInfos = JSON.parse(voteData);
+                }
+                voteInfos.push(voteInfo);
+
+                console.log(voteInfos);
+
+                // Votes in .json abspeichern
+                fs.writeFile(votesFilePath, JSON.stringify(voteInfos), 'utf8', (err) => {
+                    if (err) {
+                        console.log("ERROR: Write PollInfo failed");
+                        res.status(404).json({ error: 'Poll not found.' });
+                        return;
+                    }
+                });
+            });
             //############################# Response erstellen ###############################################
             //Response:
             //const token = new Token(poll.share.link, poll.share.value);

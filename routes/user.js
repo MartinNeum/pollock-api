@@ -4,6 +4,7 @@ const router = express.Router();
 const fs = require('fs');
 const User = require("../src/User");
 const {text} = require("express");
+const {VoteChoice} = require("../src/Vote");
 const usersFilePath = './data/users.json';
 
 /**### POST /user ###*/
@@ -28,6 +29,7 @@ router.post('', (req, res) => {
         users = JSON.parse(data);
       }
       users.push(user);
+
 
       // Users in .json abspeichern
       fs.writeFile(usersFilePath, JSON.stringify(users), 'utf8', (err) => {

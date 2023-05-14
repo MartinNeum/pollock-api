@@ -76,7 +76,7 @@ router.get('/:username', (req, res) => {
 
 // DELETE /user/{username}
 // Delete user
-router.get('/:username', (req, res) => {
+router.delete('/:username', (req, res) => {
   try {
     const username = req.params.username;
 
@@ -85,12 +85,13 @@ router.get('/:username', (req, res) => {
       res.status(400).json({ error: 'Invalid username supplied' })
       return;
     }
+
     const data = fs.readFileSync(usersFilePath, 'utf8');
     const users = JSON.parse(data);
-    const user = users.find(user => user.name === username);
+    const userIndex = users.findIndex(user => user.name === username);
 
-    if (user) {
-        users.remove(user);
+    if (userIndex !== -1) {
+      users.splice(userIndex, 1);
     } else {
       res.status(404).json({ error: 'User not found' });
     }
@@ -98,13 +99,16 @@ router.get('/:username', (req, res) => {
     //Save Users
     fs.writeFile(usersFilePath, JSON.stringify(users), 'utf8', (err) => {
       if (err) {
-        res.status(404).json({ error: 'Poll not found.' });
+        console.log("Failed to save users to userFilePath.");
+        res.status(404).json({ message: 'Poll not found.' });;
         return;
       }
-      res.status(200);
+      console.log("4");
+      res.status(200).json();
+      console.log("5");
     });
   } catch (error) {
-    res.status(404).json({ error: 'Poll not found.' });
+    res.status(404).json({ message: 'Poll not found.' });
   }
 });
 

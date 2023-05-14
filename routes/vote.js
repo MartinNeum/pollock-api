@@ -62,11 +62,11 @@ router.post('/lack/:token', (req, res) => {
                 res.status(404).json({ code: 404, error: 'Poll not found.' });
                 return;
             }
-
+            // TODO poll.body.setting.deadline?
             if (poll.deadline < timeStamp)
             {
                 console.log("ERROR: Deadline ended");
-                res.status(410).json({ code: 404, error: 'Poll is gone.' });
+                res.status(410).json({ code: 410, error: 'Poll is gone.' });
                 return;
             }
 
@@ -83,8 +83,8 @@ router.post('/lack/:token', (req, res) => {
 
                 // Vote in votes-array hinzufügen
                 if(voteData){
-                        console.log(voteData);
-                        voteInfos = JSON.parse(voteData);
+                    console.log(voteData);
+                    voteInfos = JSON.parse(voteData);
                 }
                 voteInfos.push(voteInfo);
 
@@ -102,7 +102,7 @@ router.post('/lack/:token', (req, res) => {
             //############################# Response erstellen ###############################################
             //Response:
             //const token = new Token(poll.share.link, poll.share.value);
-
+            // TODO möglicherweise neues Token erstellen
             const voteResult = new VoteResult(poll.share);
             console.log(poll.share);
             res.status(200).json(voteResult);
@@ -113,6 +113,63 @@ router.post('/lack/:token', (req, res) => {
         console.log("ERROR: Fatal Error");
         res.status(404).json({ error: 'Poll not found.' });
     }
+});
+
+/**
+ GET /vote/lack/{token}
+ Find the vote of the token
+ **/
+router.get('/lack/:token', (req, res) => {
+    try {
+
+
+        const token = req.params.token;
+
+        // Check token
+        if(token == ':token' || token == null) {
+            res.status(405).json({ error: 'Invalid input' });
+            return;
+        }
+
+
+        //############################# Vote lesen ###############################################
+        fs.readFile(votesFilePath, 'utf8', (err, data) => {
+            if (err) {
+                console.log("ERROR: Read Polls failed");
+                res.status(404).json({ error: 'Poll not found.' });
+                return;
+            }
+
+            const votes = JSON.parse(data);
+            console.log(votes);
+            // Votes nach token durchsuchen
+            // TODO Pfad anpassen
+            const vote = votes.find(v => v.share.value == token);
+            if (!vote) {
+                console.log("ERROR: Find Poll failed");
+                res.status(404).json({ code: 404, error: 'Poll not found.' });
+                return;
+            }
+            // Verfügbarkeit der Poll prüfen
+            const timeStamp = generateTimestamp();
+            // TODO Pfad anpassen
+            if (vote.body.setting.deadline < timeStamp)
+            {
+                console.log("ERROR: Deadline ended");
+                res.status(410).json({ code: 410, error: 'Poll is gone.' });
+                return;
+            }
+
+            //############################# Response erstellen ###############################################
+            res.status(200).json(vote);
+        });
+        //############################################################################
+
+    } catch (error) {
+        console.log("ERROR: Fatal Error");
+        res.status(404).json({ error: 'Poll not found.' });
+    }
+
 });
 
 

@@ -74,4 +74,41 @@ router.get('/:username', (req, res) => {
   }
 });
 
+// DELETE /user/{username}
+// Delete user
+router.get('/:username', (req, res) => {
+  try {
+    const username = req.params.username;
+
+    if (username.length === 0)
+    {
+      res.status(400).json({ error: 'Invalid username supplied' })
+      return;
+    }
+    const data = fs.readFileSync(usersFilePath, 'utf8');
+    const users = JSON.parse(data);
+    const user = users.find(user => user.name === username);
+
+    if (user) {
+        users.remove(user);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+
+    //Save Users
+    fs.writeFile(usersFilePath, JSON.stringify(users), 'utf8', (err) => {
+      if (err) {
+        res.status(404).json({ error: 'Poll not found.' });
+        return;
+      }
+      res.status(200);
+    });
+  } catch (error) {
+    res.status(404).json({ error: 'Poll not found.' });
+  }
+});
+
+
+
+
 module.exports = router;

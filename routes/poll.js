@@ -5,6 +5,7 @@ const Poll = require('../src/Poll')
 const Token = require('../src/Token')
 const fs = require('fs');
 const pollsFilePath = './data/polls.json';
+const getPolls = require('../funcs/data');
 
 
 /** #################################################### **/
@@ -57,18 +58,17 @@ router.post('/lack', (req, res) => {
     const poll = new Poll.Poll(pollBody, pollSecurity, pollShare)
 
     // polls.json bearbeiten
-    fs.readFile(pollsFilePath, 'utf8', (err, data) => {
+    /*fs.readFile(pollsFilePath, 'utf8', (err, data) => {
       if (err) {
         console.error('\nERROR bei POST /poll/lack. Fehler beim Lesen der Datei:\n', err)
         res.status(500).json({ error: 'POST /poll/lack schlug fehl' })
         return;
-      }
+      }*/
+    //TODO: FIX THIS
       
       // Poll in polls-array hinzufügen
       let polls = [];
-      if (data) {
-        polls = JSON.parse(data);
-      }
+      polls = getPolls();
       polls.push(poll);
   
       // Polls in .json abspeichern
@@ -89,7 +89,7 @@ router.post('/lack', (req, res) => {
             "value": poll.share.value
           }
         });
-      });
+      //});
 
     });
 
@@ -177,7 +177,7 @@ router.put('/lack/:token', (req, res) => {
       polls[pollIndex].body.fixed = fixed
     } else {
       console.error('Fehler beim Bearbeiten des Polls: ', err)
-      res.status(404).json({ code: 500, error: 'Fehler beim Bearbeiten des Polls.' });
+      res.status(404).json({ code: 404, error: 'Fehler beim Bearbeiten des Polls.' });
       return;
     }
 

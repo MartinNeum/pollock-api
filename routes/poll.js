@@ -30,7 +30,7 @@ router.post('/lack', (req, res) => {
       if (option.id == null || option.text == null) {
         console.error('\nERROR bei POST /poll/lack:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.')
         res.status(405).json({ "code": 405, "message": "Invalid input" })
-        return
+
       } else {
         const pollOption = new Poll.PollOption(option.id, option.text)
         pollOptions.push(pollOption)
@@ -58,17 +58,19 @@ router.post('/lack', (req, res) => {
     const poll = new Poll.Poll(pollBody, pollSecurity, pollShare)
 
     // polls.json bearbeiten
-    /*fs.readFile(pollsFilePath, 'utf8', (err, data) => {
+    fs.readFile(pollsFilePath, 'utf8', (err, data) => {
       if (err) {
         console.error('\nERROR bei POST /poll/lack. Fehler beim Lesen der Datei:\n', err)
         res.status(500).json({ error: 'POST /poll/lack schlug fehl' })
         return;
-      }*/
-    //TODO: FIX THIS
+      }
+    //TODO: FIX THIS - (ich glaube geht nicht so leicht)
+      // lass mal lieber ohne
       
       // Poll in polls-array hinzufügen
-      let polls = [];
-      polls = getPolls();
+      //const polls = getPolls(pollsFilePath);
+    //  console.log(polls);
+      const polls = JSON.parse(data);
       polls.push(poll);
   
       // Polls in .json abspeichern
@@ -89,7 +91,7 @@ router.post('/lack', (req, res) => {
             "value": poll.share.value
           }
         });
-      //});
+      });
 
     });
 

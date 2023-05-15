@@ -233,6 +233,61 @@ router.delete('/lack/:token', (req, res) => {
         }
 
 });
+/**### PUT /vote/lack/:token ###*/
+/**Update a vote of the token.**/
+router.put('/lack/:token', (req, res) => {
+
+    // Token holen
+    const token = req.params.token;
+
+    // Request body in variablen abspeichern
+    const { owner, choice } = req.body;
+
+    // Check token
+    if(token == ':token' || token == null) {
+        console.error('ERROR bei PUT /poll/lack/:token: Kein Token geliefert.');
+        res.status(404).json({ error: 'Poll not found.' });
+        return;
+    }
+
+    // voteInfos lesen
+    fs.readFile(votesFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Fehler beim Lesen der Datei:', err);
+            res.status(404).json({ error: 'Poll not found.' });
+            return;
+        }
+
+        const voteinfos = JSON.parse(data);
+
+        // voteInfo nach token durchsuchen
+        let voteIndex = voteinfos.findIndex(p => p.poll.share.value == token && p.vote.owner.name == owner.name);
+
+        // vote bearbeiten
+        if (voteIndex != -1) {
+            voteinfos[voteIndex].vote.choice = choice
+
+        } else {
+            console.error('Fehler beim Bearbeiten des Polls: ', err)
+            res.status(404).json({ code: 404, error: 'Poll not found.' });
+            return;
+        }
+
+        try {
+
+            fs.writeFileSync(votesFilePath, JSON.stringify(voteinfos, null, 2), 'utf8');
+            res.json({ "code": 200, "message": "i. O." });
+
+        } catch (err) {
+
+            console.error('\nERROR bei PUT /poll/lack/:token\n ', error)
+            res.status(404).json({ error: 'Poll not found.' })
+
+        }
+
+    });
+
+});
 
 
 module.exports = router;

@@ -31,13 +31,13 @@
     },
     "vote": {
       "owner": {
-        "name": "alfred",
+        "name": "Maxim",
         "lock": true
       },
       "choice": [
         {
-          "id": 2,
-          "worst": true
+          "id": 1,
+          "worst": false
         }
       ]
     },
@@ -80,7 +80,7 @@
       },
       "choice": [
         {
-          "id": 2,
+          "id": 1,
           "worst": true
         }
       ]

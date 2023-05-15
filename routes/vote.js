@@ -13,6 +13,7 @@ const pollsFilePath = './data/polls.json';
  POST /vote/lack/{token}
  Add a new vote to the poll
  **/
+//TODO User nur einmal abstimmen lassen
 router.post('/lack/:token', (req, res) => {
     try {
         const timeStamp = generateTimestamp();

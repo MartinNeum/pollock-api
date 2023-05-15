@@ -19,7 +19,7 @@ function getPolls(filepath) {
     });
    // console.log(returnvalue);
     return returnvalue;
-    //TODO: fix this function
+
 }
 function addPoll(poll) {
     fs.readFile(pollsFilePath, 'utf8', (err, data) => {
@@ -30,7 +30,7 @@ function addPoll(poll) {
         }
         return JSON.parse(data);
     });
-    //TODO: continue
+
 }
 
 module.exports = getPolls;

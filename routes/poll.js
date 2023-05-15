@@ -47,7 +47,7 @@ router.post('/lack', (req, res) => {
     } else {
       pollBody = new Poll.PollBody(title, description, pollOptions, pollSetting, pollFixed)
     }
-
+    // TODO Security
     // PollSecurity erstellen
     const pollSecurity = null
 
@@ -64,8 +64,6 @@ router.post('/lack', (req, res) => {
         res.status(500).json({ error: 'POST /poll/lack schlug fehl' })
         return;
       }
-    //TODO: FIX THIS - (ich glaube geht nicht so leicht)
-      // lass mal lieber ohne
       
       // Poll in polls-array hinzufügen
       //const polls = getPolls(pollsFilePath);
@@ -80,7 +78,7 @@ router.post('/lack', (req, res) => {
           res.status(500).json({ error: 'Internal Server Error' });
           return;
         }
-  
+        //TODO muss Admin Token nicht auch neu generiert werden?
         res.status(200).json({
           "admin": {
             "link": "string",
@@ -106,6 +104,7 @@ router.post('/lack', (req, res) => {
 
 /**### GET /poll/lack/:token ###*/
 /**Return the statistics of the poll by share token.**/
+//TODO Hier müssen noch die Poll Statistiken ausgegeben werden
 router.get('/lack/:token', (req, res) => {
 
   const token = req.params.token;

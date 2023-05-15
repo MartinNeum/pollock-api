@@ -79,6 +79,7 @@ router.post('/lack', (req, res) => {
           return;
         }
         //TODO muss Admin Token nicht auch neu generiert werden?
+        //FIXME Pollresult ablegen oder verknüpfen?
         res.status(200).json({
           "admin": {
             "link": "string",

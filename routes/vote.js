@@ -104,6 +104,7 @@ router.post('/lack/:token', (req, res) => {
             //Response:
             //const token = new Token(poll.share.link, poll.share.value);
             // TODO möglicherweise neues Token erstellen
+            // FIXME möglicherweise Result irgendwo ablegen/ verknüpfen?
             const voteResult = new VoteResult(poll.share);
             console.log(poll.share);
             res.status(200).json(voteResult);

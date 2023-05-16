@@ -122,15 +122,15 @@ router.get('/lack/:token', (req, res) => {
       res.status(500).json({ error: 'Internal Server Error' });
       return;
     }
-
+    if (!pollData) {
+      res.status(404).json({code: 404, error: 'Poll not found.'});
+      return;
+    }
     const polls = JSON.parse(pollData);
 
     // Polls nach token durchsuchen
     const poll = polls.find(p => p.poll.share.value == token);
-    if (!poll) {
-      res.status(404).json({code: 404, error: 'Poll not found.'});
-      return;
-    }
+
     fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
       if (err) {
         console.error('Fehler beim Lesen der Datei:', err);

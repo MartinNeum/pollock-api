@@ -95,7 +95,6 @@ router.post('/lack', (req, res) => {
           }
         });
       });
-
     });
 
   } catch (error) {

@@ -1,3 +1,10 @@
+class GeneralVoteObject{
+    constructor(vote, editToken) {
+        this.vote = vote;
+        this.editToken = editToken;
+    }
+}
+
 class Vote {
     constructor(owner, choice) {
         this.owner = owner
@@ -27,6 +34,7 @@ class VoteResult {
 }
 
 module.exports = {
+    GeneralVoteObject,
     Vote,
     VoteChoice,
     VoteInfo,

@@ -5,6 +5,10 @@ const Poll = require('../src/Poll')
 const Token = require('../src/Token')
 const fs = require('fs');
 const pollsFilePath = './data/polls.json';
+const getPolls = require('../funcs/data');
+const generateTimestamp = require("../funcs/timestamp");
+const {Statistics, StatisticsOption} = require("../src/Statistics");
+const votesFilePath = './data/votes.json';
 const {generateShareToken, generateEditToken} = require("../funcs/tokens");
 
 
@@ -16,7 +20,9 @@ const {generateShareToken, generateEditToken} = require("../funcs/tokens");
 /**### POST /poll/lack ###*/
 /**Add a new poll.**/
 router.post('/lack', (req, res) => {
+
   try {
+
     // Request body in variablen abspeichern
     const { title, description, options, setting, fixed } = req.body;
 
@@ -34,6 +40,7 @@ router.post('/lack', (req, res) => {
         pollOptions.push(pollOption)
       }
     });
+
     const pollFixed = fixed
 
     let pollBody;
@@ -49,8 +56,7 @@ router.post('/lack', (req, res) => {
     const pollSecurity = null
 
     // PollShare (Token) erstellen
-    //TODO: SET link for token
-    const pollShare = new Token(null, generateEditToken())
+    const pollShare = new Token(null, new Date().getTime())
 
     // Poll erstellen
     const poll = new Poll.Poll(pollBody, pollSecurity, pollShare)
@@ -59,10 +65,13 @@ router.post('/lack', (req, res) => {
     fs.readFile(pollsFilePath, 'utf8', (err, data) => {
       if (err) {
         console.error('\nERROR bei POST /poll/lack. Fehler beim Lesen der Datei:\n', err)
-        res.status(404).json({ "code": 404, "message": "Poll not found." })
+        res.status(500).json({ error: 'POST /poll/lack schlug fehl' })
         return;
       }
-
+      
+      // Poll in polls-array hinzufügen
+      //const polls = getPolls(pollsFilePath);
+    //  console.log(polls);
       const polls = JSON.parse(data);
       polls.push(poll);
   
@@ -70,14 +79,15 @@ router.post('/lack', (req, res) => {
       fs.writeFile(pollsFilePath, JSON.stringify(polls), 'utf8', (err) => {
         if (err) {
           console.error('\nERROR bei POST /poll/lack. Fehler beim Schreiben der Datei:\n', err);
-          res.status(404).json({ "code": 404, "message": "Poll not found." })
+          res.status(500).json({ error: 'Internal Server Error' });
           return;
         }
-        //TODO: SET link for admin and share
+        //TODO muss Admin Token nicht auch neu generiert werden?
+        //FIXME Pollresult ablegen oder verknüpfen?
         res.status(200).json({
           "admin": {
             "link": "string",
-            "value": generateEditToken()
+            "value": "71yachha3ca48yz7"
           },
           "share": {
             "link": "string",
@@ -85,11 +95,16 @@ router.post('/lack', (req, res) => {
           }
         });
       });
+
     });
+
   } catch (error) {
+
     console.error('\nERROR bei POST /poll/lack:\n ', error)
-    res.status(404).json({ "code": 404, "message": "Poll not found." })
+    res.status(500).json({ error: 'POST /poll/lack schlug fehl' })
+    
   }
+
 });
 
 /**### GET /poll/lack/:token ###*/

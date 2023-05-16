@@ -16,6 +16,7 @@ const pollsFilePath = './data/polls.json';
 //TODO User nur einmal abstimmen lassen
 router.post('/lack/:token', (req, res) => {
     try {
+        //req.header("API-KEY")
         const timeStamp = generateTimestamp();
 
         const token = req.params.token;
@@ -123,8 +124,6 @@ router.post('/lack/:token', (req, res) => {
  **/
 router.get('/lack/:token', (req, res) => {
     try {
-
-
         const token = req.params.token;
 
         // Check token
@@ -132,8 +131,6 @@ router.get('/lack/:token', (req, res) => {
             res.status(405).json({ error: 'Invalid input' });
             return;
         }
-
-
         //############################# Vote lesen ###############################################
         fs.readFile(votesFilePath, 'utf8', (err, data) => {
             if (err) {
@@ -143,7 +140,7 @@ router.get('/lack/:token', (req, res) => {
             }
 
             const voteInfos = JSON.parse(data);
-           // console.log(voteInfos);
+            // console.log(voteInfos);
             const votes = [];
             // Votes nach token durchsuchen
             voteInfos.forEach(voteInfo => {
@@ -163,11 +160,8 @@ router.get('/lack/:token', (req, res) => {
                         }
                         votes.push(voteInfo);
                     }
-
                 }
             });
-
-
             //############################# Response erstellen ###############################################
 
             res.status(200).json(votes);

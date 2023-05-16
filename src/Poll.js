@@ -1,3 +1,10 @@
+class GeneralPollObject{
+    constructor(poll, adminToken) {
+        this.poll = poll;
+        this.adminToken = adminToken;
+    }
+}
+
 class Poll {
     constructor(body, security, share) {
         this.body = body
@@ -47,6 +54,7 @@ class PollSetting {
 }
 
 module.exports = {
+    GeneralPollObject,
     Poll,
     PollBody,
     PollOption,

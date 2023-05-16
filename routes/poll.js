@@ -163,8 +163,6 @@ router.put('/lack/:token', (req, res) => {
 
     const polls = JSON.parse(data);
 
-    console.log(polls);
-
     // Polls nach token durchsuchen
     let pollIndex = polls.findIndex(p => p.adminToken == adminToken);
 

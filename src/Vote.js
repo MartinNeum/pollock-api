@@ -1,6 +1,6 @@
 class GeneralVoteObject{
-    constructor(vote, editToken) {
-        this.vote = vote;
+    constructor(voteInfo, editToken) {
+        this.voteInfo = voteInfo;
         this.editToken = editToken;
     }
 }

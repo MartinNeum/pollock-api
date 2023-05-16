@@ -7,6 +7,9 @@ const fs = require('fs');
 const pollsFilePath = './data/polls.json';
 const {generateShareToken, generateEditToken, generateAdminToken} = require("../funcs/tokens");
 const {GeneralPollObject} = require("../src/Poll");
+const generateTimestamp = require("../funcs/timestamp");
+const {Statistics, StatisticsOption} = require("../src/Statistics");
+const votesFilePath = './data/votes.json';
 
 
 /** #################################################### **/
@@ -101,7 +104,6 @@ router.post('/lack', (req, res) => {
 
 /**### GET /poll/lack/:token ###*/
 /**Return the statistics of the poll by share token.**/
-//TODO Hier müssen noch die Poll Statistiken ausgegeben werden
 router.get('/lack/:token', (req, res) => {
 
   const token = req.params.token;
@@ -114,24 +116,65 @@ router.get('/lack/:token', (req, res) => {
   }
 
   // Polls lesen
-  fs.readFile(pollsFilePath, 'utf8', (err, data) => {
+  fs.readFile(pollsFilePath, 'utf8', (err, pollData) => {
     if (err) {
       console.error('Fehler beim Lesen der Datei:', err);
       res.status(500).json({ error: 'Internal Server Error' });
       return;
     }
 
-    const polls = JSON.parse(data);
+    const polls = JSON.parse(pollData);
 
     // Polls nach token durchsuchen
-    const poll = polls.find(p => p.share.value == token);
-
+    const poll = polls.find(p => p.poll.share.value == token);
     if (!poll) {
-      res.status(404).json({ code: 404, error: 'Poll not found.' });
+      res.status(404).json({code: 404, error: 'Poll not found.'});
       return;
     }
+    fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
+      if (err) {
+        console.error('Fehler beim Lesen der Datei:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+      if(voteData){
+      const voteInfos = JSON.parse(voteData);
 
-    res.json(poll);
+      const voteParticipants = [];
+      let numOfVotes = 0;
+      let numOfWorst = 0;
+      // Votes nach token durchsuchen
+      voteInfos.forEach(voteInfo => {
+        if (voteInfo == null) {
+          console.log("keine Votes gefunden");
+          return;
+        } else {
+          //TODO nach Umstellung Zugriffe auf VoteInfo anpassen
+          if(voteInfo.poll.share.value == token){
+            // TODO Number of VOICES nicht Votes
+            numOfVotes++;
+            voteParticipants.push(voteInfo.vote.owner);
+            for (var i=0; i < voteInfo.vote.choice.length; i++){
+              if (voteInfo.vote.choice[i].worst == true){
+                numOfWorst++;
+              }
+            }
+          }
+        }
+      })
+      const statisticOptions = new StatisticsOption(numOfVotes, numOfWorst);
+      const statistic = new Statistics(poll.poll, voteParticipants, statisticOptions);
+      res.json(statistic);
+      if (!statistic) {
+        res.status(404).json({code: 404, error: 'Poll not found.'});
+        return;
+      }
+    }else{
+        const statisticOptions = new StatisticsOption(0, 0);
+        const statistic = new Statistics(poll.poll, 0, statisticOptions);
+        res.json(statistic);
+      }
+
   });
 
 });
@@ -233,7 +276,7 @@ router.delete('/lack/:token', (req, res) => {
       console.error('\nERROR bei DELETE /poll/lack/:token:\n', err);
       res.status(500).json({ error: 'ERROR bei DELETE /poll/lack/:token.' });
     }
-
+  });
   });
 });
 

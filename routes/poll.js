@@ -5,7 +5,8 @@ const Poll = require('../src/Poll')
 const Token = require('../src/Token')
 const fs = require('fs');
 const pollsFilePath = './data/polls.json';
-const {generateShareToken, generateEditToken} = require("../funcs/tokens");
+const {generateShareToken, generateEditToken, generateAdminToken} = require("../funcs/tokens");
+const {GeneralPollObject} = require("../src/Poll");
 
 
 /** #################################################### **/
@@ -50,10 +51,14 @@ router.post('/lack', (req, res) => {
 
     // PollShare (Token) erstellen
     //TODO: SET link for token
-    const pollShare = new Token(null, generateEditToken())
+    const pollShare = new Token(null, generateShareToken())
 
     // Poll erstellen
     const poll = new Poll.Poll(pollBody, pollSecurity, pollShare)
+
+    const adminToken = generateAdminToken()
+
+    const generalPollObj = new GeneralPollObject(poll,adminToken)
 
     // polls.json bearbeiten
     fs.readFile(pollsFilePath, 'utf8', (err, data) => {
@@ -62,9 +67,11 @@ router.post('/lack', (req, res) => {
         res.status(404).json({ "code": 404, "message": "Poll not found." })
         return;
       }
-
-      const polls = JSON.parse(data);
-      polls.push(poll);
+      let polls = [];
+      if (data) {
+        polls = JSON.parse(data);
+      }
+      polls.push(generalPollObj);
   
       // Polls in .json abspeichern
       fs.writeFile(pollsFilePath, JSON.stringify(polls), 'utf8', (err) => {
@@ -77,7 +84,7 @@ router.post('/lack', (req, res) => {
         res.status(200).json({
           "admin": {
             "link": "string",
-            "value": generateEditToken()
+            "value": adminToken
           },
           "share": {
             "link": "string",
@@ -134,15 +141,15 @@ router.get('/lack/:token', (req, res) => {
 router.put('/lack/:token', (req, res) => {
 
   // Token holen
-  const token = req.params.token;
+  const adminToken = req.params.token;
 
   // Request body in variablen abspeichern
   const { title, description, options, setting, fixed } = req.body;
   
   // Check token
-  if(token == ':token' || token == null) {
+  if(adminToken == null) {
     console.error('ERROR bei PUT /poll/lack/:token: Kein Token geliefert.');
-    res.status(405).json({ error: 'ERROR bei PUT /poll/lack/:token: Kein Token geliefert.' });
+    res.status(404).json({ error: 'Poll not found.' });
     return;
   }
 
@@ -150,42 +157,39 @@ router.put('/lack/:token', (req, res) => {
   fs.readFile(pollsFilePath, 'utf8', (err, data) => {
     if (err) {
       console.error('Fehler beim Lesen der Datei:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
+      res.status(404).json({ error: 'Poll not found.' });
       return;
     }
 
     const polls = JSON.parse(data);
 
+    console.log(polls);
+
     // Polls nach token durchsuchen
-    let pollIndex = polls.findIndex(p => p.share.value == token);
+    let pollIndex = polls.findIndex(p => p.adminToken == adminToken);
 
     // Poll bearbeiten
     if (pollIndex != -1) {
-      polls[pollIndex].body.title = title
-      polls[pollIndex].body.description = description
-      polls[pollIndex].body.options = options
-      polls[pollIndex].body.setting = setting
-      polls[pollIndex].body.fixed = fixed
+      polls[pollIndex].poll.body.title = title
+      polls[pollIndex].poll.body.description = description
+      polls[pollIndex].poll.body.options = options
+      polls[pollIndex].poll.body.setting = setting
+      polls[pollIndex].poll.body.fixed = fixed
     } else {
       console.error('Fehler beim Bearbeiten des Polls: ', err)
-      res.status(404).json({ code: 404, error: 'Fehler beim Bearbeiten des Polls.' });
+      res.status(404).json({ error: 'Poll not found.' });
       return;
     }
 
     try {
-
       fs.writeFileSync(pollsFilePath, JSON.stringify(polls, null, 2), 'utf8');
       res.json({ "code": 200, "message": "i. O." });
 
     } catch (err) {
-
       console.error('\nERROR bei PUT /poll/lack/:token\n ', error)
-      res.status(500).json({ error: 'PUT /poll/lack/:token schlug fehl' })
-      
+      res.status(404).json({ error: 'Poll not found.' });
     }
-
   });
-
 });
 
 /**### DELETE /poll/lack/:token ###*/

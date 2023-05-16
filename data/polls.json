@@ -1,89 +1,38 @@
 [
   {
-    "body": {
-      "title": "What is your favorite color?",
-      "description": "By blue are also meant blue-like colors, like turkish.",
-      "options": [
-        {
-          "id": 0,
-          "text": "string"
+    "poll": {
+      "body": {
+        "title": "What is your favorite Martini?",
+        "description": "Frage",
+        "options": [
+          {
+            "id": 0,
+            "text": "martin ist geil"
+          },
+          {
+            "id": 1,
+            "text": "maxim ist geil"
+          },
+          {
+            "id": 2,
+            "text": "Geschüttelt, nicht gerührt"
+          }
+        ],
+        "setting": {
+          "voices": 1,
+          "worst": false,
+          "deadline": "2024-05-29T19:21:39+02:00"
         },
-        {
-          "id": 0,
-          "text": "string"
-        }
-      ],
-      "setting": {
-        "voices": 1,
-        "worst": false,
-        "deadline": "2023-05-29T19:21:39+02:00"
+        "fixed": [
+          0
+        ]
       },
-      "fixed": [
-        0
-      ]
+      "security": null,
+      "share": {
+        "link": null,
+        "value": "S-jYK42ZgxoAq6GXC"
+      }
     },
-    "security": null,
-    "share": {
-      "link": null,
-      "value": 1683794570403
-    }
-  },
-  {
-    "body": {
-      "title": "Was ist das für eine Frage?",
-      "description": "ich habe hunger",
-      "options": [
-        {
-          "id": 1,
-          "text": "naund"
-        },
-        {
-          "id": 2,
-          "text": "nein"
-        }
-      ],
-      "setting": {
-        "voices": 1,
-        "worst": false,
-        "deadline": "2023-05-29T19:21:39+02:00"
-      },
-      "fixed": [
-        0
-      ]
-    },
-    "security": null,
-    "share": {
-      "link": null,
-      "value": 1684091049054
-    }
-  },
-  {
-    "body": {
-      "title": "Was ist das für eine Frage Teil 2?",
-      "description": "ich habe hunger",
-      "options": [
-        {
-          "id": 1,
-          "text": "naund"
-        },
-        {
-          "id": 2,
-          "text": "nein"
-        }
-      ],
-      "setting": {
-        "voices": 1,
-        "worst": false,
-        "deadline": "2023-05-29T19:21:39+02:00"
-      },
-      "fixed": [
-        0
-      ]
-    },
-    "security": null,
-    "share": {
-      "link": null,
-      "value": 1684091631119
-    }
+    "adminToken": "A-9G2vjqWAcwrxDdi"
   }
 ]

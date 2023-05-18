@@ -10,6 +10,7 @@ const usersFilePath = './data/users.json';
 /**### POST /user ###*/
 /**Add a new user.**/
 // TODO doppelte User-Erstellung verhindern
+//TODO UserAPI Key verknüpfen?
 router.post('', (req, res) => {
   try {
     // Request body in variablen abspeichern

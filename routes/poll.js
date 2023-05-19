@@ -176,7 +176,7 @@ router.get('/lack/:token', (req, res) => {
       }
 
   });
-
+  });
 });
 
 /**### PUT /poll/lack/:token ###*/
@@ -237,13 +237,15 @@ router.put('/lack/:token', (req, res) => {
 /**Deletes a poll by admin token.**/
 router.delete('/lack/:token', (req, res) => {
 
+  //TODO: check if this function needs the admin token or edit token ?
+
   // Token holen
   const token = req.params.token;
 
   // Check token
   if(token == null) {
     console.error('ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.');
-    res.status(405).json({ error: 'ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.' });
+    res.status(400).json({ error: 'Invalid poll admin token.' });
     return;
   }
 
@@ -251,33 +253,41 @@ router.delete('/lack/:token', (req, res) => {
   fs.readFile(pollsFilePath, 'utf8', (err, data) => {
     if (err) {
       console.error('Fehler beim Lesen der Datei:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
+      res.status(404).json({ error: 'Poll not found.' });
       return;
     }
 
     const polls = JSON.parse(data);
 
     // Polls nach token durchsuchen
-    const updatedPolls = polls.filter(p => p.share.value != token);
+    const updatedPolls = [];
 
-    console.log(updatedPolls)
+    polls.forEach(poll => {
+      if (poll == null) {
+        res.status(405).json({"code": 405, "message": "Invalid poll admin token."});
+        return;
+      } else {
+        if (poll.adminToken != token) {
+          updatedPolls.push(poll);
+        }
+      }
+    });
 
     try {
-
       if (updatedPolls.length < polls.length) {
         fs.writeFileSync(pollsFilePath, JSON.stringify(updatedPolls, null, 2), 'utf8');
         res.json({ "code": 200, "message": "i. O." });
       } else {
         console.error('\nERROR bei DELETE /poll/lack/:token: Schreiben des neuen Arrays schlug fehl.');
-        res.status(500).json({ error: 'ERROR bei DELETE /poll/lack/:token: Schreiben des neuen Arrays schlug fehl.' });
+        res.status(404).json({ error: 'Poll not found.' });
       }
 
     } catch (err) {
       console.error('\nERROR bei DELETE /poll/lack/:token:\n', err);
-      res.status(500).json({ error: 'ERROR bei DELETE /poll/lack/:token.' });
+      res.status(404).json({ error: 'Poll not found.' });
     }
   });
-  });
 });
+
 
 module.exports = router;

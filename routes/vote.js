@@ -183,7 +183,7 @@ router.delete('/lack/:token', (req, res) => {
     const token = req.params.token;
 
     // Check token
-    if(token == ':token' || token == null) {
+    if(token == null) {
         console.error('ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.');
         res.status(405).json({ error: 'ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.' });
         return;

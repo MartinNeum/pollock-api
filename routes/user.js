@@ -11,7 +11,7 @@ const usersFilePath = './data/users.json';
 
 /**### POST /user ###*/
 /**Add a new user.**/
-//TODO doppelte User-Erstellung verhindern
+//TODO doppelte User-Erstellung verhindern notwendig?
 router.post('', (req, res) => {
   try {
 
@@ -20,7 +20,7 @@ router.post('', (req, res) => {
 
     //TODO: do we need to save the password ? Or only the lock=true or =false value?
     const user = new User.User(name, true);
-    const generalUser = new GeneralUser(user, generateAPIKey());
+    const generalUser = new GeneralUser(user, password, generateAPIKey());
 
     fs.readFile(usersFilePath, 'utf8', (err, data) => {
       if (err) {
@@ -53,7 +53,60 @@ router.post('', (req, res) => {
   }
 });
 
-//TODO: POST /user/key //Create a API-Key for an existent user.
+/**
+ POST /user/key
+ Create a API-Key for an existent user.
+ **/
+router.post('/key', (req, res) => {
+  try {
+
+    // Request body in variablen abspeichern
+    const { name, password } = req.body;
+
+    fs.readFile(usersFilePath, 'utf8', (err, data) => {
+      if (err) {
+        console.error('\nERROR bei POST /user. Fehler beim Lesen der Datei:\n', err)
+        res.status(404).json({code: 404, message: 'Poll not found.' });
+        return;
+      }
+
+      const users = JSON.parse(data);
+
+      // Polls nach token durchsuchen
+      let userIndex = users.findIndex(u => u.user.name == name && u.password == password);
+
+      const newApiKey = generateAPIKey();
+
+      // Poll bearbeiten
+      if (userIndex != -1) {
+        users[userIndex].apiKey = newApiKey;
+      } else {
+        res.status(404).json({code:404, error: 'Poll not found.'});
+        return;
+      }
+      try {
+        // Users in .json abspeichern
+        fs.writeFile(usersFilePath, JSON.stringify(users), 'utf8', (err) => {
+          if (err) {
+            console.error('\nERROR bei POST /users. Fehler beim Schreiben der Datei:\n', err);
+            res.status(404).json({ message: 'Poll not found.' });
+            return;
+          }
+
+          res.status(200).json(newApiKey);
+        });
+      } catch (err) {
+        res.status(404).json({ error: 'Poll not found.' });
+      }
+
+
+    });
+  } catch (error) {
+    console.error('\nERROR bei POST /user:\n ', error);
+    res.status(404).json({ message: 'Poll not found.' });
+  }
+});
+
 
 // /user/{username}
 // GET user by username

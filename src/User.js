@@ -5,8 +5,9 @@ class User {
     }
 }
 class GeneralUser {
-    constructor(user, apiKey) {
+    constructor(user, password, apiKey) {
         this.user = user
+        this.password = password;
         this.apiKey = apiKey
     }
 }

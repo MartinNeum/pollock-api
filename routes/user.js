@@ -5,18 +5,22 @@ const fs = require('fs');
 const User = require("../src/User");
 const {text} = require("express");
 const {VoteChoice} = require("../src/Vote");
+const {generateAPIKey} = require("../funcs/tokens");
+const {GeneralUser} = require("../src/User");
 const usersFilePath = './data/users.json';
 
 /**### POST /user ###*/
 /**Add a new user.**/
-// TODO doppelte User-Erstellung verhindern
+//TODO doppelte User-Erstellung verhindern
 //TODO UserAPI Key verknüpfen?
 router.post('', (req, res) => {
   try {
+
     // Request body in variablen abspeichern
     const { name, password } = req.body;
 
-    const user = new User(name, password);
+    const user = new User.User(name, password);
+    const generalUser = new GeneralUser(user, generateAPIKey());
 
     fs.readFile(usersFilePath, 'utf8', (err, data) => {
       if (err) {
@@ -30,7 +34,7 @@ router.post('', (req, res) => {
       if (data) {
         users = JSON.parse(data);
       }
-      users.push(user);
+      users.push(generalUser);
 
 
       // Users in .json abspeichern
@@ -41,7 +45,7 @@ router.post('', (req, res) => {
           return;
         }
 
-        res.status(200).json(user.name);
+        res.status(200).json(generalUser.apiKey);
       });
     });
   } catch (error) {
@@ -55,6 +59,8 @@ router.post('', (req, res) => {
 // GET user by user name
 router.get('/:username', (req, res) => {
   try {
+    const apiKey = req.headers['api-key'];
+
     const username = req.params.username;
 
     if (username.length === 0)

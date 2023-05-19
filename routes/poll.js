@@ -289,5 +289,4 @@ router.delete('/lack/:token', (req, res) => {
   });
 });
 
-
 module.exports = router;

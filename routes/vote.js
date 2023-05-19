@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 
 const fs = require('fs');
-const {VoteChoice, Vote, VoteResult, VoteInfo} = require("../src/Vote");
+const {VoteChoice, Vote, VoteResult, VoteInfo, GeneralVoteObject} = require("../src/Vote");
 const User = require("../src/User");
 const generateTimestamp = require("../funcs/timestamp");
 const Token = require("../src/Token");
+const {generateEditToken} = require("../funcs/tokens");
 const votesFilePath = './data/votes.json';
 const pollsFilePath = './data/polls.json';
 
@@ -18,11 +19,12 @@ router.post('/lack/:token', (req, res) => {
     try {
         //req.header("API-KEY")
         const timeStamp = generateTimestamp();
+        const editToken = generateEditToken();
 
-        const token = req.params.token;
+        const tokenParam = req.params.token;
 
         // Check token
-        if(token == ':token' || token == null) {
+        if(tokenParam == null) {
             res.status(405).json({ message: 'Invalid input' });
             return;
         }
@@ -31,7 +33,7 @@ router.post('/lack/:token', (req, res) => {
         // Request body in variablen abspeichern
         const { owner, choice } = req.body;
 
-        const user = new User(owner.name, owner.lock);
+        const user = new User.User(owner.name, owner.lock);
 
         const voteChoices = [];
         choice.forEach(choice => {
@@ -58,14 +60,14 @@ router.post('/lack/:token', (req, res) => {
             const polls = JSON.parse(data);
 
             // Polls nach token durchsuchen
-            const poll = polls.find(p => p.share.value == token);
+            const poll = polls.find(p => p.poll.share.value == tokenParam);
             if (!poll) {
                 console.log("ERROR: Find Poll failed");
                 res.status(404).json({ code: 404, message: 'Poll not found.' });
                 return;
             }
             // TODO testen
-            if (poll.body.setting.deadline < timeStamp)
+            if (poll.poll.body.setting.deadline < timeStamp)
             {
                 console.log("ERROR: Deadline ended");
                 res.status(410).json({ code: 410, message: 'Poll is gone.' });
@@ -74,6 +76,7 @@ router.post('/lack/:token', (req, res) => {
 
             //############################# Vote Info Obj. erstellen + Speichern ###############################################
             const voteInfo = new VoteInfo(poll,vote, timeStamp);
+            const generalVoteObject = new GeneralVoteObject(voteInfo,editToken)
             let voteInfos = [];
 
             fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
@@ -88,9 +91,7 @@ router.post('/lack/:token', (req, res) => {
                     console.log(voteData);
                     voteInfos = JSON.parse(voteData);
                 }
-                voteInfos.push(voteInfo);
-
-                console.log(voteInfos);
+                voteInfos.push(generalVoteObject);
 
                 // Votes in .json abspeichern
                 fs.writeFile(votesFilePath, JSON.stringify(voteInfos), 'utf8', (err) => {
@@ -103,11 +104,11 @@ router.post('/lack/:token', (req, res) => {
             });
             //############################# Response erstellen ###############################################
             //Response:
-            //const token = new Token(poll.share.link, poll.share.value);
-            // TODO möglicherweise neues Token erstellen
-            // FIXME möglicherweise Result irgendwo ablegen/ verknüpfen?
-            const voteResult = new VoteResult(poll.share);
-            console.log(poll.share);
+
+            //TODO: Set link for edittoken output:
+            const returnToken = new Token("link",editToken);
+            const voteResult = new VoteResult(returnToken);
+
             res.status(200).json(voteResult);
         });
         //############################################################################
@@ -124,10 +125,10 @@ router.post('/lack/:token', (req, res) => {
  **/
 router.get('/lack/:token', (req, res) => {
     try {
-        const token = req.params.token;
+        const editToken = req.params.token;
 
         // Check token
-        if(token == ':token' || token == null) {
+        if(editToken == null) {
             res.status(405).json({ message: 'Invalid input' });
             return;
         }
@@ -149,7 +150,7 @@ router.get('/lack/:token', (req, res) => {
                     res.status(405).json({ "code": 405, "message": "Invalid input" });
                     return;
                 } else {
-                    if(voteInfo.poll.share.value == token){
+                    if(voteInfo.poll.share.value == editToken){
                         // Verfügbarkeit der Poll prüfen
                         const timeStamp = generateTimestamp();
                         if (voteInfos.poll.body.setting.deadline < timeStamp)

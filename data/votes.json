@@ -1,0 +1,56 @@
+[
+  {
+    "voteInfo": {
+      "poll": {
+        "poll": {
+          "body": {
+            "title": "What is your favorite Martini?",
+            "description": "Frage",
+            "options": [
+              {
+                "id": 0,
+                "text": "martin ist geil"
+              },
+              {
+                "id": 1,
+                "text": "maxim ist geil"
+              },
+              {
+                "id": 2,
+                "text": "Geschüttelt, nicht gerührt"
+              }
+            ],
+            "setting": {
+              "voices": 1,
+              "worst": false,
+              "deadline": "2024-05-29T19:21:39+02:00"
+            },
+            "fixed": [
+              0
+            ]
+          },
+          "security": null,
+          "share": {
+            "link": null,
+            "value": "S-jYK42ZgxoAq6GXC"
+          }
+        },
+        "adminToken": "A-9G2vjqWAcwrxDdi"
+      },
+      "vote": {
+        "owner": {
+          "name": "Olli",
+          "lock": true
+        },
+        "choice": [
+          {
+            "id": 1,
+            "worst": false
+          }
+        ]
+      },
+      "time": "2023-05-19T14:35:18+02:00"
+    },
+    "editToken": "E-nBF6EJcL9a77bCN"
+  }
+]

@@ -25,7 +25,7 @@ router.post('', (req, res) => {
     fs.readFile(usersFilePath, 'utf8', (err, data) => {
       if (err) {
         console.error('\nERROR bei POST /user. Fehler beim Lesen der Datei:\n', err)
-        res.status(404).json({ error: 'Poll not found.' });
+        res.status(404).json({ message: 'Poll not found.' });
         return;
       }
 
@@ -40,7 +40,7 @@ router.post('', (req, res) => {
       fs.writeFile(usersFilePath, JSON.stringify(users), 'utf8', (err) => {
         if (err) {
           console.error('\nERROR bei POST /users. Fehler beim Schreiben der Datei:\n', err);
-          res.status(404).json({ error: 'Poll not found.' });
+          res.status(404).json({ message: 'Poll not found.' });
           return;
         }
 
@@ -49,7 +49,7 @@ router.post('', (req, res) => {
     });
   } catch (error) {
     console.error('\nERROR bei POST /user:\n ', error);
-    res.status(404).json({ error: 'Poll not found.' });
+    res.status(404).json({ message: 'Poll not found.' });
   }
 });
 
@@ -60,12 +60,12 @@ router.post('', (req, res) => {
 router.get('/:username', (req, res) => {
   try {
     const apiKey = req.header("API-KEY");
-    console.log("API-Key:" + apiKey);
+
     const username = req.params.username;
 
     if (username.length === 0)
     {
-      res.status(400).json({ error: 'Invalid username supplied' })
+      res.status(400).json({ message: 'Invalid username supplied' })
       return;
     }
 
@@ -79,51 +79,66 @@ router.get('/:username', (req, res) => {
       if (user) {
         res.json(user.user);
       } else {
-        res.status(404).json({ error: 'Invalid username supplied' });
+        res.status(404).json({ message: 'Invalid username supplied' });
       }
     }
     else
     {
-      res.status(404).json({ error: 'User not found' });
+      res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
-    res.status(404).json({ error: 'Poll not found.' });
+    res.status(404).json({ message: 'Poll not found.' });
   }
 });
 
 // DELETE /user/{username}
 // Delete user
+// This can only be done by the logged in user.
 router.delete('/:username', (req, res) => {
   try {
+    const apiKey = req.header("API-KEY");
     const username = req.params.username;
 
     if (username.length === 0)
     {
-      res.status(400).json({ error: 'Invalid username supplied' })
+      res.status(400).json({code: 400,message: 'Invalid username supplied' })
       return;
     }
 
     const data = fs.readFileSync(usersFilePath, 'utf8');
     const users = JSON.parse(data);
-    const userIndex = users.findIndex(user => user.name === username);
-
-    if (userIndex !== -1) {
-      users.splice(userIndex, 1);
-    } else {
-      res.status(404).json({ error: 'User not found' });
+    const userIndex = users.findIndex(user => user.user.name == username);
+    const user = users.find(user => user.user.name == username);
+    const me = users.find(user => user.apiKey == apiKey);
+    if (me != null) {
+      if (userIndex !== -1) {
+        if (user == me)
+        {
+          users.splice(userIndex, 1);
+        }
+        else
+        {
+          res.status(400).json({code: 400, message:'Invalid username supplied'});
+        }
+      } else {
+        res.status(400).json({code: 400,message:'Invalid username supplied'});
+      }
     }
-
+    else
+    {
+      res.status(404).json({code: 404,message:'User not found'})
+    }
     //Save Users
     fs.writeFile(usersFilePath, JSON.stringify(users), 'utf8', (err) => {
       if (err) {
         console.log("Failed to save users to userFilePath.");
-        res.status(404).json({ message: 'Poll not found.' });;
+        res.status(404).json({code: 404, message: 'Poll not found.' });;
         return;
       }
       res.status(200).json();
     });
   } catch (error) {
-    res.status(404).json({ message: 'Poll not found.' });
+    res.status(404).json({code: 404, message: 'Poll not found.' });
   }
 });
 

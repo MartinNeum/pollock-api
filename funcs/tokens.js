@@ -52,8 +52,27 @@ function generateEditToken() {
     return token;
 }
 
+/**
+ * Generates a random API-KEY.
+ *
+ * @returns {string} The randomly generated API-KEY
+ */
+function generateAPIKey() {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const tokenLength = 20;
+    let token = 'U-';
+
+    for (let i = 0; i < tokenLength; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        token += characters.charAt(randomIndex);
+    }
+
+    return token;
+}
+
 module.exports = {
     generateEditToken,
     generateShareToken,
-    generateAdminToken
+    generateAdminToken,
+    generateAPIKey
 };

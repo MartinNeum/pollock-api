@@ -4,5 +4,11 @@ class User {
         this.lock = lock
     }
 }
+class GeneralUser {
+    constructor(user, apiKey) {
+        this.user = user
+        this.apiKey = apiKey
+    }
+}
 
-module.exports = User
+module.exports = {User, GeneralUser}

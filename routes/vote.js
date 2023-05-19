@@ -140,26 +140,26 @@ router.get('/lack/:token', (req, res) => {
                 return;
             }
 
-            const voteInfos = JSON.parse(data);
+            const voteObjs = JSON.parse(data);
             // console.log(voteInfos);
             const votes = [];
             // Votes nach token durchsuchen
-            voteInfos.forEach(voteInfo => {
-                if (voteInfo == null) {
+            voteObjs.forEach(voteObj => {
+                if (voteObj == null) {
                     console.log("ERROR: Read VoteInfos failed");
                     res.status(405).json({ "code": 405, "message": "Invalid input" });
                     return;
                 } else {
-                    if(voteInfo.poll.share.value == editToken){
+                    if(voteObj.editToken == editToken){
                         // Verfügbarkeit der Poll prüfen
                         const timeStamp = generateTimestamp();
-                        if (voteInfos.poll.body.setting.deadline < timeStamp)
+                        if (voteObj.voteInfo.poll.poll.body.setting.deadline < timeStamp)
                         {
                             console.log("ERROR: Deadline ended");
                             res.status(410).json({ code: 410, message: 'Poll is gone.' });
                             return;
                         }
-                        votes.push(voteInfo);
+                        votes.push(voteObj);
                     }
                 }
             });
@@ -173,6 +173,59 @@ router.get('/lack/:token', (req, res) => {
         res.status(404).json({ message: 'Poll not found.' });
     }
 
+});
+
+/**### PUT /vote/lack/:token ###*/
+/**Update a vote of the token.**/
+router.put('/lack/:token', (req, res) => {
+
+    // Token holen
+    const editToken = req.params.token;
+
+    // Request body in variablen abspeichern
+    const { owner, choice } = req.body;
+
+    // Check token
+    if(editToken == null) {
+        console.error('ERROR bei PUT /poll/lack/:token: Kein Token geliefert.');
+        res.status(404).json({ message: 'Poll not found.' });
+        return;
+    }
+
+    // voteInfos lesen
+    fs.readFile(votesFilePath, 'utf8', (err, data) => {
+        if (err) {
+            console.error('Fehler beim Lesen der Datei:', err);
+            res.status(404).json({ message: 'Poll not found.' });
+            return;
+        }
+
+        const voteObjs = JSON.parse(data);
+
+        // voteObj nach token durchsuchen
+        let voteIndex = voteObjs.findIndex(p => p.editToken == editToken);
+
+        // vote bearbeiten
+        if (voteIndex != -1) {
+            voteObjs[voteIndex].voteInfo.vote.choice = choice
+            voteObjs[voteIndex].voteInfo.vote.owner = owner
+
+        } else {
+            console.error('Fehler beim Bearbeiten des Polls: ', err)
+            res.status(404).json({ code: 404, message: 'Poll not found.' });
+            return;
+        }
+
+        try {
+
+            fs.writeFileSync(votesFilePath, JSON.stringify(voteObjs, null, 2), 'utf8');
+            res.json({ "code": 200, message: "i. O." });
+
+        } catch (err) {
+            res.status(404).json({ message: 'Poll not found.' })
+
+        }
+    });
 });
 
 /**### DELETE /vote/lack/:token ###*/
@@ -230,61 +283,7 @@ router.delete('/lack/:token', (req, res) => {
         }
 
 });
-/**### PUT /vote/lack/:token ###*/
-/**Update a vote of the token.**/
-router.put('/lack/:token', (req, res) => {
 
-    // Token holen
-    const token = req.params.token;
-
-    // Request body in variablen abspeichern
-    const { owner, choice } = req.body;
-
-    // Check token
-    if(token == ':token' || token == null) {
-        console.error('ERROR bei PUT /poll/lack/:token: Kein Token geliefert.');
-        res.status(404).json({ message: 'Poll not found.' });
-        return;
-    }
-
-    // voteInfos lesen
-    fs.readFile(votesFilePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('Fehler beim Lesen der Datei:', err);
-            res.status(404).json({ message: 'Poll not found.' });
-            return;
-        }
-
-        const voteinfos = JSON.parse(data);
-
-        // voteInfo nach token durchsuchen
-        let voteIndex = voteinfos.findIndex(p => p.poll.share.value == token && p.vote.owner.name == owner.name);
-
-        // vote bearbeiten
-        if (voteIndex != -1) {
-            voteinfos[voteIndex].vote.choice = choice
-
-        } else {
-            console.error('Fehler beim Bearbeiten des Polls: ', err)
-            res.status(404).json({ code: 404, message: 'Poll not found.' });
-            return;
-        }
-
-        try {
-
-            fs.writeFileSync(votesFilePath, JSON.stringify(voteinfos, null, 2), 'utf8');
-            res.json({ "code": 200, message: "i. O." });
-
-        } catch (err) {
-
-            console.error('\nERROR bei PUT /poll/lack/:token\n ', error)
-            res.status(404).json({ message: 'Poll not found.' })
-
-        }
-
-    });
-
-});
 
 
 module.exports = router;

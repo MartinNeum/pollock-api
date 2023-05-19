@@ -39,12 +39,12 @@
       },
       "vote": {
         "owner": {
-          "name": "Olli",
+          "name": "Laura",
           "lock": true
         },
         "choice": [
           {
-            "id": 1,
+            "id": 3,
             "worst": false
           }
         ]

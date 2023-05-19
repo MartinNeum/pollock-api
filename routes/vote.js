@@ -232,40 +232,36 @@ router.put('/lack/:token', (req, res) => {
 /**Deletes a vote of a token.**/
 router.delete('/lack/:token', (req, res) => {
     try {
-
     // Token holen
-    const token = req.params.token;
+    const editToken = req.params.token;
 
     // Check token
-    if(token == null) {
+    if(editToken == null) {
         console.error('ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.');
-        res.status(405).json({ message: 'ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.' });
+        res.status(400).json({code: 404, message: 'Invalid poll admin token.' });
         return;
     }
     //############################# Vote lesen ###############################################
     fs.readFile(votesFilePath, 'utf8', (err, data) => {
         if (err) {
             console.log("ERROR: Read Polls failed");
-            res.status(404).json({message: 'Poll not found.'});
+            res.status(404).json({code: 404, message: 'Poll not found.'});
             return;
         }
 
-        const voteInfos = JSON.parse(data);
+        const voteObjs = JSON.parse(data);
         // console.log(voteInfos);
         const notDelVotes = [];
         // Votes nach token durchsuchen
-        voteInfos.forEach(voteInfo => {
-            if (voteInfo == null) {
+        voteObjs.forEach(voteObj => {
+            if (voteObj == null) {
                 console.log("ERROR: Read VoteInfos failed");
-                res.status(405).json({code: 405, message: "Invalid input"});
+                res.status(404).json({code: 404, message: "Poll not found."});
                 return;
             } else {
-               // console.log(voteInfo);
-                if (voteInfo.poll.share.value != token) {
-                    console.log("hier wird hinzugefügt");
-                    notDelVotes.push(voteInfo);
+                if (voteObj.editToken != editToken) {
+                    notDelVotes.push(voteObj);
                 }
-
             }
         });
       //  console.log(notDelVotes);
@@ -273,15 +269,11 @@ router.delete('/lack/:token', (req, res) => {
 
         fs.writeFileSync(votesFilePath, JSON.stringify(notDelVotes, null, 2), 'utf8');
         res.json({"code": 200, message: "i. O."});
-
-        // TODO Admin Token prüfen
-        //res.status(400).json({error: 'Invalid poll admin token.'});
     });
     } catch (error) {
             console.log("ERROR: Fatal Error");
-            res.status(404).json({ message: 'Poll not found.' });
+            res.status(404).json({code: 404, message: 'Poll not found.' });
         }
-
 });
 
 

@@ -12,14 +12,14 @@ const usersFilePath = './data/users.json';
 /**### POST /user ###*/
 /**Add a new user.**/
 //TODO doppelte User-Erstellung verhindern
-//TODO UserAPI Key verknüpfen?
 router.post('', (req, res) => {
   try {
 
     // Request body in variablen abspeichern
     const { name, password } = req.body;
 
-    const user = new User.User(name, password);
+    //TODO: do we need to save the password ? Or only the lock=true or =false value?
+    const user = new User.User(name, true);
     const generalUser = new GeneralUser(user, generateAPIKey());
 
     fs.readFile(usersFilePath, 'utf8', (err, data) => {
@@ -36,7 +36,6 @@ router.post('', (req, res) => {
       }
       users.push(generalUser);
 
-
       // Users in .json abspeichern
       fs.writeFile(usersFilePath, JSON.stringify(users), 'utf8', (err) => {
         if (err) {
@@ -49,18 +48,19 @@ router.post('', (req, res) => {
       });
     });
   } catch (error) {
-
     console.error('\nERROR bei POST /user:\n ', error);
     res.status(404).json({ error: 'Poll not found.' });
   }
 });
 
+//TODO: POST /user/key //Create a API-Key for an existent user.
+
 // /user/{username}
-// GET user by user name
+// GET user by username
 router.get('/:username', (req, res) => {
   try {
-    const apiKey = req.headers['api-key'];
-
+    const apiKey = req.header("API-KEY");
+    console.log("API-Key:" + apiKey);
     const username = req.params.username;
 
     if (username.length === 0)
@@ -68,13 +68,22 @@ router.get('/:username', (req, res) => {
       res.status(400).json({ error: 'Invalid username supplied' })
       return;
     }
+
     const data = fs.readFileSync(usersFilePath, 'utf8');
     const users = JSON.parse(data);
-    const user = users.find(user => user.name === username);
 
-    if (user) {
-      res.json(user);
-    } else {
+    const me = users.find(user => user.apiKey == apiKey);
+    if (me != null){
+      const user = users.find(user => user.user.name === username);
+
+      if (user) {
+        res.json(user.user);
+      } else {
+        res.status(404).json({ error: 'Invalid username supplied' });
+      }
+    }
+    else
+    {
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
@@ -111,16 +120,11 @@ router.delete('/:username', (req, res) => {
         res.status(404).json({ message: 'Poll not found.' });;
         return;
       }
-      console.log("4");
       res.status(200).json();
-      console.log("5");
     });
   } catch (error) {
     res.status(404).json({ message: 'Poll not found.' });
   }
 });
-
-
-
 
 module.exports = router;

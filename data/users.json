@@ -1,1 +1,16 @@
-[{"user":{"name":"Martin","lock":"123"},"apiKey":"U-4OXSckMv8mGde7wDCANp"},{"user":{"name":"Alfred","lock":"007"},"apiKey":"U-sXDKIxNcIEVyQvlAMT9p"}]
+[
+  {
+    "user": {
+      "name": "Martin",
+      "lock": true
+    },
+    "apiKey": "U-4OXSckMv8mGde7wDCANp"
+  },
+  {
+    "user": {
+      "name": "Alfred",
+      "lock": true
+    },
+    "apiKey": "U-sXDKIxNcIEVyQvlAMT9p"
+  }
+]

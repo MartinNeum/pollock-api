@@ -6,7 +6,7 @@ const Token = require('../src/Token')
 const fs = require('fs');
 const pollsFilePath = './data/polls.json';
 const {generateShareToken, generateEditToken, generateAdminToken} = require("../funcs/tokens");
-const {GeneralPollObject} = require("../src/Poll");
+const {GeneralPollObject, PollSecurity} = require("../src/Poll");
 const generateTimestamp = require("../funcs/timestamp");
 const {Statistics, StatisticsOption} = require("../src/Statistics");
 const votesFilePath = './data/votes.json';
@@ -325,7 +325,7 @@ router.delete('/lack/:token', (req, res) => {
 router.post('/lock', (req, res) => {
   try {
     // Request body in variablen abspeichern
-    const { title, description, options, setting, fixed } = req.body;
+    const { title, description, options, setting, fixed, owner, users, visibility } = req.body;
 
     // PollBody erstellen
     const pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline)
@@ -353,8 +353,7 @@ router.post('/lock', (req, res) => {
     }
 
     // PollSecurity erstellen
-    //TODO Security
-    const pollSecurity = null
+    const pollSecurity = new PollSecurity(owner, users, visibility);
 
     // PollShare (Token) erstellen
     const pollShareToken = generateShareToken();

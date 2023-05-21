@@ -130,7 +130,11 @@ router.get('/lack/:token', (req, res) => {
 
     // Polls nach token durchsuchen
     const poll = polls.find(p => p.poll.share.value == token);
-
+   // console.log(poll);
+    if (poll == null){
+      res.status(404).json({code: 404, error: 'Poll not found.'});
+      return;
+    }
     fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
       if (err) {
         console.error('Fehler beim Lesen der Datei:', err);
@@ -148,6 +152,9 @@ router.get('/lack/:token', (req, res) => {
 
           if (eineVoteInfo == null) {
             console.log("keine Votes gefunden");
+            const statisticOptions = new StatisticsOption(0, 0);
+            const statistic = new Statistics(poll.poll, 0, statisticOptions);
+            res.json(statistic);
             return;
           } else {
             if (eineVoteInfo.voteInfo.poll.poll.share.value == token) {
@@ -402,6 +409,7 @@ router.post('/lock', (req, res) => {
 /**Return the statistics of the poll by share token.**/
 router.get('/lock/:token', (req, res) => {
 
+
   const token = req.params.token;
 
   // Check token
@@ -426,7 +434,11 @@ router.get('/lock/:token', (req, res) => {
 
     // Polls nach token durchsuchen
     const poll = polls.find(p => p.poll.share.value == token);
-
+    // console.log(poll);
+    if (poll == null){
+      res.status(404).json({code: 404, error: 'Poll not found.'});
+      return;
+    }
     fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
       if (err) {
         console.error('Fehler beim Lesen der Datei:', err);
@@ -444,6 +456,9 @@ router.get('/lock/:token', (req, res) => {
 
         if (eineVoteInfo == null) {
           console.log("keine Votes gefunden");
+          const statisticOptions = new StatisticsOption(0, 0);
+          const statistic = new Statistics(poll.poll, 0, statisticOptions);
+          res.json(statistic);
           return;
         } else {
           if (eineVoteInfo.voteInfo.poll.poll.share.value == token) {
@@ -476,6 +491,7 @@ router.get('/lock/:token', (req, res) => {
                   }
                 }
               }
+
               voteParticipants.push(voteInfo.voteInfo.vote.owner);
             }
           }

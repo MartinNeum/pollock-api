@@ -143,8 +143,7 @@ router.get('/lack/:token', (req, res) => {
 
             const voteObjs = JSON.parse(data);
             // console.log(voteInfos);
-            // TODO nur eine Vote ausgeben? mithilfe edit token
-            const votes = [];
+            let vote = null;
             // Votes nach token durchsuchen
             voteObjs.forEach(voteObj => {
                 if (voteObj == null) {
@@ -161,13 +160,17 @@ router.get('/lack/:token', (req, res) => {
                             res.status(410).json({ code: 410, message: 'Poll is gone.' });
                             return;
                         }
-                        votes.push(voteObj);
+                        vote = voteObj;
                     }
+
                 }
             });
             //############################# Response erstellen ###############################################
-
-            res.status(200).json(votes);
+            if(vote == null){
+                console.log("ERROR: False Edit Token");
+                res.status(404).json({ message: 'Poll not found.' });
+            }
+            res.status(200).json(vote);
         });
 
     } catch (error) {
@@ -411,7 +414,7 @@ router.get('/lock/:token', (req, res) => {
 
             const voteObjs = JSON.parse(data);
             // console.log(voteInfos);
-            const votes = [];
+            let vote = null;
             // Votes nach token durchsuchen
             voteObjs.forEach(voteObj => {
                 if (voteObj == null) {
@@ -428,13 +431,17 @@ router.get('/lock/:token', (req, res) => {
                             res.status(410).json({ code: 410, message: 'Poll is gone.' });
                             return;
                         }
-                        votes.push(voteObj);
+                        vote = voteObj;
                     }
+
                 }
             });
             //############################# Response erstellen ###############################################
-
-            res.status(200).json(votes);
+            if(vote == null){
+                console.log("ERROR: False Edit Token");
+                res.status(404).json({ message: 'Poll not found.' });
+            }
+            res.status(200).json(vote);
         });
 
     } catch (error) {

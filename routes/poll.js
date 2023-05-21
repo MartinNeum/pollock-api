@@ -521,7 +521,7 @@ router.put('/lock/:token', (req, res) => {
   const adminToken = req.params.token;
 
   // Request body in variablen abspeichern
-  const { title, description, options, setting, fixed } = req.body;
+  const { title, description, options, setting, fixed, owner, users, visibility } = req.body;
 
   // Check token
   if(adminToken == null) {
@@ -550,6 +550,9 @@ router.put('/lock/:token', (req, res) => {
       polls[pollIndex].poll.body.options = options
       polls[pollIndex].poll.body.setting = setting
       polls[pollIndex].poll.body.fixed = fixed
+      polls[pollIndex].poll.security.owner = owner
+      polls[pollIndex].poll.security.users = users
+      polls[pollIndex].poll.security.visibility = visibility
     } else {
       console.error('Fehler beim Bearbeiten des Polls: ', err)
       console.error('Bitte Admin Token prüfen')

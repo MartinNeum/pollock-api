@@ -166,6 +166,7 @@ router.get('/lack/:token', (req, res) => {
                 }
             });
             //############################# Response erstellen ###############################################
+           //FIXME Server wird beendet bei ausführen des IF-Blocks? aber nur bei LACK, LOCK läuft
             if(vote == null){
                 console.log("ERROR: False Edit Token");
                 res.status(404).json({ message: 'Poll not found.' });
@@ -440,6 +441,7 @@ router.get('/lock/:token', (req, res) => {
             if(vote == null){
                 console.log("ERROR: False Edit Token");
                 res.status(404).json({ message: 'Poll not found.' });
+                return;
             }
             res.status(200).json(vote);
         });

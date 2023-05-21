@@ -171,7 +171,7 @@ router.get('/lack/:token', (req, res) => {
         } else {
           if(voteInfo.voteInfo.poll.poll.share.value == token){
             for (let i=0; i < voteInfo.voteInfo.poll.poll.body.options.length; i++) {
-              console.log(i);
+              //console.log(i);
               for (let j = 0; j < voteInfo.voteInfo.vote.choice.length; j++) {
 
               if (voteInfo.voteInfo.poll.poll.body.options[i].id == voteInfo.voteInfo.vote.choice[j].id) {

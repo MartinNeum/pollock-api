@@ -30,7 +30,7 @@ router.post('/lack', (req, res) => {
     const pollOptions = []
     options.forEach(option => {
       if (option.id == null || option.text == null) {
-        console.error('\nERROR bei POST /poll/lack:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.')
+        console.error('\nERROR bei POST /poll/lock:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.')
         res.status(405).json({ "code": 405, "message": "Invalid input" })
 
       } else {
@@ -42,19 +42,22 @@ router.post('/lack', (req, res) => {
 
     let pollBody;
     if (title == null || pollOptions == null) {
-      console.error('\nERROR bei POST /poll/lack:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.')
+      console.error('\nERROR bei POST /poll/lock:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.')
       res.status(405).json({ "code": 405, "message": "Invalid input" })
       return
     } else {
       pollBody = new Poll.PollBody(title, description, pollOptions, pollSetting, pollFixed)
     }
+    // TODO Security
+    // PollSecurity erstellen
+    const pollSecurity = null
 
     // PollShare (Token) erstellen
     //TODO: SET link for token
     const pollShare = new Token(null, generateShareToken())
 
     // Poll erstellen
-    const poll = new Poll.Poll(pollBody, pollShare)
+    const poll = new Poll.Poll(pollBody, pollSecurity, pollShare)
 
     const adminToken = generateAdminToken()
 
@@ -63,7 +66,7 @@ router.post('/lack', (req, res) => {
     // polls.json bearbeiten
     fs.readFile(pollsFilePath, 'utf8', (err, data) => {
       if (err) {
-        console.error('\nERROR bei POST /poll/lack. Fehler beim Lesen der Datei:\n', err)
+        console.error('\nERROR bei POST /poll/lock. Fehler beim Lesen der Datei:\n', err)
         res.status(404).json({ "code": 404, "message": "Poll not found." })
         return;
       }
@@ -72,11 +75,11 @@ router.post('/lack', (req, res) => {
         polls = JSON.parse(data);
       }
       polls.push(generalPollObj);
-  
+
       // Polls in .json abspeichern
       fs.writeFile(pollsFilePath, JSON.stringify(polls), 'utf8', (err) => {
         if (err) {
-          console.error('\nERROR bei POST /poll/lack. Fehler beim Schreiben der Datei:\n', err);
+          console.error('\nERROR bei POST /poll/lock. Fehler beim Schreiben der Datei:\n', err);
           res.status(404).json({ "code": 404, "message": "Poll not found." })
           return;
         }
@@ -88,13 +91,13 @@ router.post('/lack', (req, res) => {
           },
           "share": {
             "link": "string",
-            "value": poll.share.value
+            "value": pollShare.value
           }
         });
       });
     });
   } catch (error) {
-    console.error('\nERROR bei POST /poll/lack:\n ', error)
+    console.error('\nERROR bei POST /poll/lock:\n ', error)
     res.status(404).json({ "code": 404, "message": "Poll not found." })
   }
 });

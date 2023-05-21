@@ -146,7 +146,6 @@ router.get('/lack/:token', (req, res) => {
           console.log("keine Votes gefunden");
           return;
         } else {
-          //TODO nach Umstellung Zugriffe auf VoteInfo anpassen
           if(voteInfo.voteInfo.poll.poll.share.value == token){
             // TODO Number of VOICES nicht Votes
             numOfVotes++;
@@ -419,13 +418,12 @@ router.get('/lock/:token', (req, res) => {
             console.log("keine Votes gefunden");
             return;
           } else {
-            //TODO nach Umstellung Zugriffe auf VoteInfo anpassen
-            if(voteInfo.poll.share.value == token){
+            if(voteInfo.voteInfo.poll.poll.share.value == token){
               // TODO Number of VOICES nicht Votes
               numOfVotes++;
-              voteParticipants.push(voteInfo.vote.owner);
-              for (var i=0; i < voteInfo.vote.choice.length; i++){
-                if (voteInfo.vote.choice[i].worst == true){
+              voteParticipants.push(voteInfo.voteInfo.vote.owner);
+              for (var i=0; i < voteInfo.voteInfo.vote.choice.length; i++){
+                if (voteInfo.voteInfo.vote.choice[i].worst == true){
                   numOfWorst++;
                 }
               }

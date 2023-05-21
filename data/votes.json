@@ -4,26 +4,22 @@
       "poll": {
         "poll": {
           "body": {
-            "title": "What is your favorite Martini?",
-            "description": "Frage",
+            "title": "What is your favorite color?",
+            "description": "By blue are also meant blue-like colors, like turkish.",
             "options": [
               {
                 "id": 0,
-                "text": "martin ist geil"
+                "text": "Herzfrat"
               },
               {
                 "id": 1,
-                "text": "maxim ist geil"
-              },
-              {
-                "id": 2,
-                "text": "Geschüttelt, nicht gerührt"
+                "text": "gutmens"
               }
             ],
             "setting": {
               "voices": 1,
               "worst": false,
-              "deadline": "2024-05-29T19:21:39+02:00"
+              "deadline": "2023-05-29T19:21:39+02:00"
             },
             "fixed": [
               0
@@ -31,15 +27,15 @@
           },
           "security": null,
           "share": {
-            "link": null,
-            "value": "S-jYK42ZgxoAq6GXC"
+            "link": "localhost:8080/poll/S-axHrqDxlUpX5zHL",
+            "value": "S-axHrqDxlUpX5zHL"
           }
         },
-        "adminToken": "A-9G2vjqWAcwrxDdi"
+        "adminToken": "A-T7cNlCXrSYZ9NAV"
       },
       "vote": {
         "owner": {
-          "name": "alfred"
+          "name": "Alfred"
         },
         "choice": [
           {
@@ -48,61 +44,8 @@
           }
         ]
       },
-      "time": "2023-05-21T12:26:54+02:00"
+      "time": "2023-05-21T16:54:41+02:00"
     },
-    "editToken": "E-ohuOYjCAWzbL20N"
-  },
-  {
-    "voteInfo": {
-      "poll": {
-        "poll": {
-          "body": {
-            "title": "What is your favorite Martini?",
-            "description": "Frage",
-            "options": [
-              {
-                "id": 0,
-                "text": "martin ist geil"
-              },
-              {
-                "id": 1,
-                "text": "maxim ist geil"
-              },
-              {
-                "id": 2,
-                "text": "Geschüttelt, nicht gerührt"
-              }
-            ],
-            "setting": {
-              "voices": 1,
-              "worst": false,
-              "deadline": "2024-05-29T19:21:39+02:00"
-            },
-            "fixed": [
-              0
-            ]
-          },
-          "security": null,
-          "share": {
-            "link": null,
-            "value": "S-jYK42ZgxoAq6GXC"
-          }
-        },
-        "adminToken": "A-9G2vjqWAcwrxDdi"
-      },
-      "vote": {
-        "owner": {
-          "name": "oliver"
-        },
-        "choice": [
-          {
-            "id": 0,
-            "worst": true
-          }
-        ]
-      },
-      "time": "2023-05-21T13:58:29+02:00"
-    },
-    "editToken": "E-GWQI7lBw9Kgrouc"
+    "editToken": "E-ms0OVMX839Bu2yj"
   }
 ]

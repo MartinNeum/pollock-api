@@ -138,8 +138,22 @@ router.get('/lack/:token', (req, res) => {
       const voteInfos = JSON.parse(voteData);
 
       const voteParticipants = [];
-      let numOfVotes = 0;
-      let numOfWorst = 0;
+      const numOfVotes = [];
+      const numOfWorst = [];
+       // Arrays initial füllen
+        const eineVoteInfo = voteInfos.find(p => p.voteInfo.poll.poll.share.value == token);
+
+          if (eineVoteInfo == null) {
+            console.log("keine Votes gefunden");
+            return;
+          } else {
+            if (eineVoteInfo.voteInfo.poll.poll.share.value == token) {
+              for (let i = 0; i < eineVoteInfo.voteInfo.poll.poll.body.options.length; i++) {
+                numOfVotes[i] = 0;
+                numOfWorst[i] = 0;
+              }
+            }
+          }
       // Votes nach token durchsuchen
       voteInfos.forEach(voteInfo => {
         if (voteInfo == null) {
@@ -147,14 +161,24 @@ router.get('/lack/:token', (req, res) => {
           return;
         } else {
           if(voteInfo.voteInfo.poll.poll.share.value == token){
-            // TODO Number of VOICES nicht Votes
-            numOfVotes++;
-            voteParticipants.push(voteInfo.voteInfo.vote.owner);
-            for (var i=0; i < voteInfo.voteInfo.vote.choice.length; i++){
-              if (voteInfo.voteInfo.vote.choice[i].worst == true){
-                numOfWorst++;
+            for (let i=0; i < voteInfo.voteInfo.poll.poll.body.options.length; i++) {
+              console.log(i);
+              for (let j = 0; j < voteInfo.voteInfo.vote.choice.length; j++) {
+
+              if (voteInfo.voteInfo.poll.poll.body.options[i].id == voteInfo.voteInfo.vote.choice[j].id) {
+                numOfVotes[i]++;
+              //  console.log("Votes");
+              //  console.log(numOfVotes[i]);
+                if (voteInfo.voteInfo.vote.choice[j].worst == true) {
+                  numOfWorst[i]= numOfWorst[i] +1;
+                  // console.log("Worst");
+                  //console.log(numOfWorst[i]);
+                }
               }
             }
+            }
+
+            voteParticipants.push(voteInfo.voteInfo.vote.owner);
           }
         }
       })
@@ -410,8 +434,22 @@ router.get('/lock/:token', (req, res) => {
         const voteInfos = JSON.parse(voteData);
 
         const voteParticipants = [];
-        let numOfVotes = 0;
-        let numOfWorst = 0;
+        const numOfVotes = [];
+        const numOfWorst = [];
+        // Arrays initial füllen
+        const eineVoteInfo = voteInfos.find(p => p.voteInfo.poll.poll.share.value == token);
+
+        if (eineVoteInfo == null) {
+          console.log("keine Votes gefunden");
+          return;
+        } else {
+          if (eineVoteInfo.voteInfo.poll.poll.share.value == token) {
+            for (let i = 0; i < eineVoteInfo.voteInfo.poll.poll.body.options.length; i++) {
+              numOfVotes[i] = 0;
+              numOfWorst[i] = 0;
+            }
+          }
+        }
         // Votes nach token durchsuchen
         voteInfos.forEach(voteInfo => {
           if (voteInfo == null) {
@@ -419,14 +457,23 @@ router.get('/lock/:token', (req, res) => {
             return;
           } else {
             if(voteInfo.voteInfo.poll.poll.share.value == token){
-              // TODO Number of VOICES nicht Votes
-              numOfVotes++;
-              voteParticipants.push(voteInfo.voteInfo.vote.owner);
-              for (var i=0; i < voteInfo.voteInfo.vote.choice.length; i++){
-                if (voteInfo.voteInfo.vote.choice[i].worst == true){
-                  numOfWorst++;
+              for (let i=0; i < voteInfo.voteInfo.poll.poll.body.options.length; i++) {
+                console.log(i);
+                for (let j = 0; j < voteInfo.voteInfo.vote.choice.length; j++) {
+
+                  if (voteInfo.voteInfo.poll.poll.body.options[i].id == voteInfo.voteInfo.vote.choice[j].id) {
+                    numOfVotes[i]++;
+                    //  console.log("Votes");
+                    //  console.log(numOfVotes[i]);
+                    if (voteInfo.voteInfo.vote.choice[j].worst == true) {
+                      numOfWorst[i]= numOfWorst[i] +1;
+                      // console.log("Worst");
+                      //console.log(numOfWorst[i]);
+                    }
+                  }
                 }
               }
+              voteParticipants.push(voteInfo.voteInfo.vote.owner);
             }
           }
         })

@@ -296,8 +296,6 @@ router.delete('/lack/:token', (req, res) => {
 
 
 
-
-
 /**********************************LOCK ENDPOINTS****+++++++++++++++++++++++++++++++++*********/
 /**
  POST /vote/lock/{token}

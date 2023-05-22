@@ -11,6 +11,7 @@ const generateTimestamp = require("../funcs/timestamp");
 const {Statistics, StatisticsOption} = require("../src/Statistics");
 const votesFilePath = './data/votes.json';
 const usersFilePath = './data/users.json';
+const { promisify } = require('util');
 
 
 /** #################################################### **/
@@ -322,10 +323,13 @@ router.delete('/lack/:token', (req, res) => {
   });
 });
 
+
+
+
 /**########################LOCK ENDPOINT############################*/
 /**### POST /poll/lock ###*/
 /**Add a new poll.**/
-router.post('/lock', (req, res) => {
+router.post('/lock', async (req, res) => {
   try {
     const apiKey = req.header("API-KEY");
 
@@ -333,50 +337,32 @@ router.post('/lock', (req, res) => {
     const { title, description, options, setting, fixed, owner, users, visibility } = req.body;
 
     //Security Check
-    //==========================================
-    // Get User by API Key
-    fs.readFile(usersFilePath, 'utf8', (err, data) => {
-      if (err) {
-        console.log("ERROR: Read Polls failed");
-        res.status(404).json({code: 404, message: 'Poll not found.'});
-        return;
-      }
-      const users = JSON.parse(data);
-      // Polls nach token durchsuchen
-      const myUser = users.find(u => u.apiKey == apiKey);
+    const usersData = await fs.promises.readFile(usersFilePath, 'utf8');
+    const usersJson = JSON.parse(usersData);
 
-      if (myUser == null || myUser.user.name != owner.name || myUser.user.lock != "true")
-      {
-        console.log("User with API-KEY not found.");
-        res.status(404).json({code: 404, message: 'Poll not found.'});
-        return;
-      }
-    });
+    // Polls nach token durchsuchen
+    const myUser = usersJson.find(u => u.apiKey === apiKey);
+
+    if (myUser == null || myUser.user.name !== owner.name || !myUser.user.lock) {
+      console.log("User with API-KEY not found.");
+      return res.status(405).json({ "code": 405, "message": "Invalid input" });
+    }
 
     // PollBody erstellen
-    const pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline)
+    const pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline);
 
-    const pollOptions = []
-    options.forEach(option => {
+    const pollOptions = [];
+    for (const option of options) {
       if (option.id == null || option.text == null) {
-        console.error('\nERROR bei POST /poll/lock:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.')
-        res.status(405).json({ "code": 405, "message": "Invalid input" })
-
-      } else {
-        const pollOption = new Poll.PollOption(option.id, option.text)
-        pollOptions.push(pollOption)
+        console.error('\nERROR bei POST /poll/lock:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.');
+        return res.status(405).json({ "code": 405, "message": "Invalid input" });
       }
-    });
-    const pollFixed = fixed
-
-    let pollBody;
-    if (title == null || pollOptions == null) {
-      console.error('\nERROR bei POST /poll/lock:\n Mindestens ein Feld wurde nicht im Request-Body geliefert.')
-      res.status(405).json({ "code": 405, "message": "Invalid input" })
-      return
-    } else {
-      pollBody = new Poll.PollBody(title, description, pollOptions, pollSetting, pollFixed)
+      const pollOption = new Poll.PollOption(option.id, option.text);
+      pollOptions.push(pollOption);
     }
+
+    const pollFixed = fixed;
+    const pollBody = new Poll.PollBody(title, description, pollOptions, pollSetting, pollFixed);
 
     // PollSecurity erstellen
     const pollSecurity = new PollSecurity(owner, users, visibility);
@@ -384,50 +370,37 @@ router.post('/lock', (req, res) => {
     // PollShare (Token) erstellen
     const pollShareToken = generateShareToken();
     const pollShareLink = "localhost:8080/poll/" + pollShareToken;
-    const pollShare = new Token(pollShareLink, pollShareToken)
+    const pollShare = new Token(pollShareLink, pollShareToken);
 
     // Poll erstellen
-    const poll = new Poll.Poll(pollBody, pollSecurity, pollShare)
+    const poll = new Poll.Poll(pollBody, pollSecurity, pollShare);
 
-    const adminToken = generateAdminToken()
+    const adminToken = generateAdminToken();
 
-    const generalPollObj = new GeneralPollObject(poll,adminToken)
+    const generalPollObj = new GeneralPollObject(poll, adminToken);
 
     // polls.json bearbeiten
-    fs.readFile(pollsFilePath, 'utf8', (err, data) => {
-      if (err) {
-        console.error('\nERROR bei POST /poll/lock. Fehler beim Lesen der Datei:\n', err)
-        res.status(404).json({ "code": 404, "message": "Poll not found." })
-        return;
-      }
-      let polls = [];
-      if (data) {
-        polls = JSON.parse(data);
-      }
-      polls.push(generalPollObj);
+    const pollsData = await fs.promises.readFile(pollsFilePath, 'utf8');
+    let polls = [];
+    if (pollsData) {
+      polls = JSON.parse(pollsData);
+    }
+    polls.push(generalPollObj);
 
-      // Polls in .json abspeichern
-      fs.writeFile(pollsFilePath, JSON.stringify(polls), 'utf8', (err) => {
-        if (err) {
-          console.error('\nERROR bei POST /poll/lock. Fehler beim Schreiben der Datei:\n', err);
-          res.status(404).json({ "code": 404, "message": "Poll not found." })
-          return;
-        }
-        res.status(200).json({
-          "admin": {
-            "link": "localhost:8080/poll/"+ adminToken,
-            "value": adminToken
-          },
-          "share": {
-            "link": pollShareLink,
-            "value": pollShareToken
-          }
-        });
-      });
+    await fs.promises.writeFile(pollsFilePath, JSON.stringify(polls), 'utf8');
+    res.status(200).json({
+      "admin": {
+        "link": "localhost:8080/poll/" + adminToken,
+        "value": adminToken
+      },
+      "share": {
+        "link": pollShareLink,
+        "value": pollShareToken
+      }
     });
   } catch (error) {
-    console.error('\nERROR bei POST /poll/lock:\n ', error)
-    res.status(404).json({ "code": 404, "message": "Poll not found." })
+    console.error('\nERROR bei POST /poll/lock:\n ', error);
+    res.status(404).json({ "code": 404, "message": "Poll not found." });
   }
 });
 
@@ -444,6 +417,7 @@ router.get('/lock/:token', (req, res) => {
 //TODO: API-Key prüfen lassen
 router.put('/lock/:token', (req, res) => {
 
+  const apiKey = req.header("API-KEY");
   // Token holen
   const adminToken = req.params.token;
 
@@ -451,7 +425,7 @@ router.put('/lock/:token', (req, res) => {
   const { title, description, options, setting, fixed, owner, users, visibility } = req.body;
 
   // Check token
-  if(adminToken == null) {
+  if(adminToken == null || apiKey == null) {
     console.error('ERROR bei PUT /poll/lock/:token: Kein Token geliefert.');
     res.status(404).json({ error: 'Poll not found.' });
     return;
@@ -461,7 +435,7 @@ router.put('/lock/:token', (req, res) => {
   fs.readFile(pollsFilePath, 'utf8', (err, data) => {
     if (err) {
       console.error('Fehler beim Lesen der Datei:', err);
-      res.status(404).json({ error: 'Poll not found.' });
+      res.status(404).json({code: 404, error: 'Poll not found.' });
       return;
     }
 
@@ -469,6 +443,29 @@ router.put('/lock/:token', (req, res) => {
 
     // Polls nach token durchsuchen
     let pollIndex = polls.findIndex(p => p.adminToken == adminToken);
+
+    //Security Check
+    //==========================================
+    // Get User by API Key
+    fs.readFile(usersFilePath, 'utf8', (err, usersData) => {
+      if (err) {
+        console.log("ERROR: Read Polls failed");
+        res.status(404).json({code: 404, message: 'Poll not found.'});
+        return;
+      }
+      const users = JSON.parse(usersData);
+      // Polls nach token durchsuchen
+      const myUser = users.find(u => u.apiKey == apiKey);
+      console.log(myUser.user.name)
+      console.log(polls[pollIndex].poll.security);
+      console.log(polls[pollIndex].poll.security.owner.name);
+      if (myUser == null || myUser.user.name != polls[pollIndex].poll.security.owner.name || !myUser.user.lock)
+      {
+        console.log("User with API-KEY not found.");
+        res.status(404).json({code: 404, message: 'Poll not found.'});
+        return;
+      }
+    });
 
     // Poll bearbeiten
     if (pollIndex != -1) {
@@ -490,7 +487,6 @@ router.put('/lock/:token', (req, res) => {
     try {
       fs.writeFileSync(pollsFilePath, JSON.stringify(polls, null, 2), 'utf8');
       res.json({ "code": 200, "message": "i. O." });
-
     } catch (err) {
       console.error('\nERROR bei PUT /poll/lock/:token\n ', error)
       res.status(404).json({ error: 'Poll not found.' });

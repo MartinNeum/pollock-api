@@ -9,6 +9,7 @@ const Token = require("../src/Token");
 const {generateEditToken} = require("../funcs/tokens");
 const votesFilePath = './data/votes.json';
 const pollsFilePath = './data/polls.json';
+const usersFilePath = './data/users.json';
 
 /**
  POST /vote/lack/{token}
@@ -288,7 +289,12 @@ router.delete('/lack/:token', (req, res) => {
             res.status(404).json({code: 404, message: 'Poll not found.' });
         }
 });
-//TODO API KEY prüfen lassen?
+
+
+
+
+
+
 /**********************************LOCK ENDPOINTS****+++++++++++++++++++++++++++++++++*********/
 /**
  POST /vote/lock/{token}
@@ -297,19 +303,32 @@ router.delete('/lack/:token', (req, res) => {
 //TODO User nur einmal abstimmen lassen
 router.post('/lock/:token', (req, res) => {
     try {
-        //req.header("API-KEY")
+        const apiKey = req.header("API-KEY")
         const timeStamp = generateTimestamp();
         const editToken = generateEditToken();
         const editLink = "localhost:8080/poll/" + editToken;
 
-
         const tokenParam = req.params.token;
 
         // Check token
-        if(tokenParam == null) {
+        if(tokenParam == null || apiKey == null) {
             res.status(405).json({ message: 'Invalid input' });
             return;
         }
+
+        // Get User by API Key
+        var myUser = null;
+        fs.readFile(usersFilePath, 'utf8', (err, data) => {
+            if (err) {
+                console.log("ERROR: Read Polls failed");
+                res.status(404).json({message: 'Poll not found.'});
+                return;
+            }
+            const users = JSON.parse(data);
+            // Polls nach token durchsuchen
+            myUser = users.find(u => u.apiKey == apiKey);
+        });
+
 
         //############################# Vote Obj. erstellen###############################################
         // Request body in variablen abspeichern
@@ -348,6 +367,18 @@ router.post('/lock/:token', (req, res) => {
                 res.status(404).json({ code: 404, message: 'Poll not found.' });
                 return;
             }
+
+            // Check Security Permissions
+            if (poll.poll.security.visibility == "lock")
+            {
+                if (!poll.poll.security.users.contains(myUser))
+                {
+                    res.status(404).json({code: 404, message: 'Poll not found.'});
+                    return;
+                }
+            }
+
+            // Check if Poll is alive
             if (poll.poll.body.setting.deadline < timeStamp)
             {
                 console.log("ERROR: Deadline ended");
@@ -403,6 +434,7 @@ router.post('/lock/:token', (req, res) => {
  GET /vote/lock/{token}
  Find the vote of the token
  **/
+//TODO: API-Key prüfen lassen
 router.get('/lock/:token', (req, res) => {
     try {
         const editToken = req.params.token;
@@ -463,6 +495,7 @@ router.get('/lock/:token', (req, res) => {
 
 /**### PUT /vote/lock/:token ###*/
 /**Update a vote of the token.**/
+//TODO: API-Key prüfen lassen
 router.put('/lock/:token', (req, res) => {
 
     // Token holen
@@ -517,6 +550,7 @@ router.put('/lock/:token', (req, res) => {
 
 /**### DELETE /vote/lock/:token ###*/
 /**Deletes a vote of a token.**/
+//TODO: API-Key prüfen lassen
 router.delete('/lock/:token', (req, res) => {
     try {
         // Token holen

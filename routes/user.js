@@ -107,9 +107,9 @@ router.post('/key', (req, res) => {
   }
 });
 
-
 // /user/{username}
 // GET user by username
+//TODO: API-Key prüfen lassen
 router.get('/:username', (req, res) => {
   try {
     const apiKey = req.header("API-KEY");
@@ -147,6 +147,7 @@ router.get('/:username', (req, res) => {
 // DELETE /user/{username}
 // Delete user
 // This can only be done by the logged in user.
+// TODO: API-Key prüfen lassen
 router.delete('/:username', (req, res) => {
   try {
     const apiKey = req.header("API-KEY");

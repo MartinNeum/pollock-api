@@ -318,10 +318,11 @@ router.delete('/lack/:token', (req, res) => {
     }
   });
 });
-//TODO implement API Check?
+
 /**########################LOCK ENDPOINT############################*/
 /**### POST /poll/lock ###*/
 /**Add a new poll.**/
+//TODO: API-Key prüfen lassen
 router.post('/lock', (req, res) => {
   try {
     // Request body in variablen abspeichern
@@ -407,6 +408,7 @@ router.post('/lock', (req, res) => {
 
 /**### GET /poll/lock/:token ###*/
 /**Return the statistics of the poll by share token.**/
+//TODO: API-Key prüfen lassen
 router.get('/lock/:token', (req, res) => {
 
 
@@ -515,6 +517,7 @@ router.get('/lock/:token', (req, res) => {
 
 /**### PUT /poll/lock/:token ###*/
 /**Update a poll by admin token.**/
+//TODO: API-Key prüfen lassen
 router.put('/lock/:token', (req, res) => {
 
   // Token holen
@@ -573,9 +576,8 @@ router.put('/lock/:token', (req, res) => {
 
 /**### DELETE /poll/lock/:token ###*/
 /**Deletes a poll by admin token.**/
+//TODO: API-Key prüfen lassen
 router.delete('/lock/:token', (req, res) => {
-
-
 
   // Token holen
   const token = req.params.token;

@@ -104,6 +104,7 @@ router.post('/lack', (req, res) => {
 
 /**### GET /poll/lack/:token ###*/
 /**Return the statistics of the poll by share token.**/
+//TODO: implement check that only polls with lack visibility can be accessed!
 router.get('/lack/:token', (req, res) => {
 
   const token = req.params.token;
@@ -211,6 +212,7 @@ router.get('/lack/:token', (req, res) => {
 
 /**### PUT /poll/lack/:token ###*/
 /**Update a poll by admin token.**/
+//TODO: implement check that only polls with lack visibility can be accessed!
 router.put('/lack/:token', (req, res) => {
 
   // Token holen
@@ -266,6 +268,7 @@ router.put('/lack/:token', (req, res) => {
 
 /**### DELETE /poll/lack/:token ###*/
 /**Deletes a poll by admin token.**/
+//TODO: implement check that only polls with lack visibility can be accessed!
 router.delete('/lack/:token', (req, res) => {
 
   // Token holen
@@ -342,7 +345,7 @@ router.post('/lock', (req, res) => {
       // Polls nach token durchsuchen
       const myUser = users.find(u => u.apiKey == apiKey);
 
-      if (myUser == null || myUser.user.name != owner.name)
+      if (myUser == null || myUser.user.name != owner.name || myUser.user.lock != "true")
       {
         console.log("User with API-KEY not found.");
         res.status(404).json({code: 404, message: 'Poll not found.'});
@@ -433,7 +436,7 @@ router.post('/lock', (req, res) => {
 //TODO: API-Key prüfen lassen
 router.get('/lock/:token', (req, res) => {
 
-
+  const apiKey = req.header("API-KEY");
   const token = req.params.token;
 
   // Check token
@@ -442,6 +445,27 @@ router.get('/lock/:token', (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
     return;
   }
+
+  //Security Check
+  //==========================================
+  // Get User by API Key
+  fs.readFile(usersFilePath, 'utf8', (err, data) => {
+    if (err) {
+      console.log("ERROR: Read Polls failed");
+      res.status(404).json({code: 404, message: 'Poll not found.'});
+      return;
+    }
+    const users = JSON.parse(data);
+    // Polls nach token durchsuchen
+    const myUser = users.find(u => u.apiKey == apiKey);
+
+    if (myUser == null || myUser.user.name != owner.name)
+    {
+      console.log("User with API-KEY not found.");
+      res.status(404).json({code: 404, message: 'Poll not found.'});
+      return;
+    }
+  });
 
   // Polls lesen
   fs.readFile(pollsFilePath, 'utf8', (err, pollData) => {

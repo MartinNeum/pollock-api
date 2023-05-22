@@ -124,6 +124,7 @@ router.post('/lack/:token', (req, res) => {
  GET /vote/lack/{token}
  Find the vote of the token
  **/
+//TODO: implement check that only polls with lack visibility can be accessed!
 router.get('/lack/:token', (req, res) => {
     try {
         const editToken = req.params.token;
@@ -184,6 +185,7 @@ router.get('/lack/:token', (req, res) => {
 
 /**### PUT /vote/lack/:token ###*/
 /**Update a vote of the token.**/
+//TODO: implement check that only polls with lack visibility can be accessed!
 router.put('/lack/:token', (req, res) => {
 
     // Token holen
@@ -237,6 +239,7 @@ router.put('/lack/:token', (req, res) => {
 
 /**### DELETE /vote/lack/:token ###*/
 /**Deletes a vote of a token.**/
+//TODO: implement check that only polls with lack visibility can be accessed!
 router.delete('/lack/:token', (req, res) => {
     try {
     // Token holen

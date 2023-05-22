@@ -311,24 +311,10 @@ router.post('/lock/:token', (req, res) => {
         const tokenParam = req.params.token;
 
         // Check token
-        if(tokenParam == null || apiKey == null) {
+        if(tokenParam == null) {
             res.status(405).json({ message: 'Invalid input' });
             return;
         }
-
-        // Get User by API Key
-        var myUser = null;
-        fs.readFile(usersFilePath, 'utf8', (err, data) => {
-            if (err) {
-                console.log("ERROR: Read Polls failed");
-                res.status(404).json({message: 'Poll not found.'});
-                return;
-            }
-            const users = JSON.parse(data);
-            // Polls nach token durchsuchen
-            myUser = users.find(u => u.apiKey == apiKey);
-        });
-
 
         //############################# Vote Obj. erstellen###############################################
         // Request body in variablen abspeichern
@@ -351,14 +337,14 @@ router.post('/lock/:token', (req, res) => {
         // Neues Vote Objekt
         const vote = new Vote(user, voteChoices);
         //############################# Poll lesen ###############################################
-        fs.readFile(pollsFilePath, 'utf8', (err, data) => {
-            if (err) {
+        fs.readFile(pollsFilePath, 'utf8', (err, pollData) => {
+            if(err){
                 console.log("ERROR: Read Polls failed");
                 res.status(404).json({ message: 'Poll not found.' });
                 return;
             }
 
-            const polls = JSON.parse(data);
+            const polls = JSON.parse(pollData);
 
             // Polls nach token durchsuchen
             const poll = polls.find(p => p.poll.share.value == tokenParam);
@@ -369,9 +355,28 @@ router.post('/lock/:token', (req, res) => {
             }
 
             // Check Security Permissions
+            var myUser = null;
             if (poll.poll.security.visibility == "lock")
             {
-                if (!poll.poll.security.users.contains(myUser))
+                // Get User by API Key
+                if (apiKey != null)
+                {
+                    fs.readFile(usersFilePath, 'utf8', (err, userData) => {
+                        if (err) {
+                            console.log("ERROR: Read Polls failed");
+                            res.status(404).json({message: 'Poll not found.'});
+                            return;
+                        }
+                        const users = JSON.parse(userData);
+                        // Polls nach token durchsuchen
+                        myUser = users.find(u => u.apiKey == apiKey);
+                    });
+                }
+                else{
+                    res.status(405).json({ message: 'Invalid input' });
+                    return;
+                }
+                if (!poll.poll.security.users.contains(myUser.user) || myUser.user.lock != "true")
                 {
                     res.status(404).json({code: 404, message: 'Poll not found.'});
                     return;

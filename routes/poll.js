@@ -10,6 +10,7 @@ const {GeneralPollObject, PollSecurity} = require("../src/Poll");
 const generateTimestamp = require("../funcs/timestamp");
 const {Statistics, StatisticsOption} = require("../src/Statistics");
 const votesFilePath = './data/votes.json';
+const usersFilePath = './data/users.json';
 
 
 /** #################################################### **/
@@ -267,7 +268,6 @@ router.put('/lack/:token', (req, res) => {
 /**Deletes a poll by admin token.**/
 router.delete('/lack/:token', (req, res) => {
 
-
   // Token holen
   const token = req.params.token;
 
@@ -322,11 +322,33 @@ router.delete('/lack/:token', (req, res) => {
 /**########################LOCK ENDPOINT############################*/
 /**### POST /poll/lock ###*/
 /**Add a new poll.**/
-//TODO: API-Key prüfen lassen
 router.post('/lock', (req, res) => {
   try {
+    const apiKey = req.header("API-KEY");
+
     // Request body in variablen abspeichern
     const { title, description, options, setting, fixed, owner, users, visibility } = req.body;
+
+    //Security Check
+    //==========================================
+    // Get User by API Key
+    fs.readFile(usersFilePath, 'utf8', (err, data) => {
+      if (err) {
+        console.log("ERROR: Read Polls failed");
+        res.status(404).json({code: 404, message: 'Poll not found.'});
+        return;
+      }
+      const users = JSON.parse(data);
+      // Polls nach token durchsuchen
+      const myUser = users.find(u => u.apiKey == apiKey);
+
+      if (myUser == null || myUser.user.name != owner.name)
+      {
+        console.log("User with API-KEY not found.");
+        res.status(404).json({code: 404, message: 'Poll not found.'});
+        return;
+      }
+    });
 
     // PollBody erstellen
     const pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline)

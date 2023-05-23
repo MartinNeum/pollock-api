@@ -415,7 +415,7 @@ router.get('/lock/:token', (req, res) => {
 /**### PUT /poll/lock/:token ###*/
 /**Update a poll by admin token.**/
 //TODO: API-Key prüfen lassen
-router.put('/lock/:token', (req, res) => {
+router.put('/lock/:token', async (req, res) => {
 
   const apiKey = req.header("API-KEY");
   // Token holen
@@ -431,41 +431,38 @@ router.put('/lock/:token', (req, res) => {
     return;
   }
 
+  //Load Users
+  const usersData = await fs.promises.readFile(usersFilePath, 'utf8');
+  const usersJson = JSON.parse(usersData);
+
+  const myUser = usersJson.find(u => u.apiKey === apiKey);
+
+  if (myUser == null || myUser.user.name !== owner.name || !myUser.user.lock) {
+    console.log("User with API-KEY not found.");
+    return res.status(405).json({ "code": 405, "message": "Invalid input" });
+  }
+
   // Polls lesen
-  fs.readFile(pollsFilePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Fehler beim Lesen der Datei:', err);
-      res.status(404).json({code: 404, error: 'Poll not found.' });
-      return;
-    }
+  const pollsData = await fs.promises.readFile(pollsFilePath, 'utf8');
+  let polls = [];
+  if (pollsData) {
+    polls = JSON.parse(pollsData);
+  }
 
-    const polls = JSON.parse(data);
-
-    // Polls nach token durchsuchen
-    let pollIndex = polls.findIndex(p => p.adminToken == adminToken);
+  // Polls nach token durchsuchen
+  let pollIndex = polls.findIndex(p => p.adminToken == adminToken);
 
     //Security Check
     //==========================================
     // Get User by API Key
-    fs.readFile(usersFilePath, 'utf8', (err, usersData) => {
-      if (err) {
-        console.log("ERROR: Read Polls failed");
-        res.status(404).json({code: 404, message: 'Poll not found.'});
-        return;
-      }
-      const users = JSON.parse(usersData);
-      // Polls nach token durchsuchen
-      const myUser = users.find(u => u.apiKey == apiKey);
-      console.log(myUser.user.name)
-      console.log(polls[pollIndex].poll.security);
-      console.log(polls[pollIndex].poll.security.owner.name);
-      if (myUser == null || myUser.user.name != polls[pollIndex].poll.security.owner.name || !myUser.user.lock)
-      {
+
+  // Polls nach token durchsuchen
+  if (myUser == null || myUser.user.name != polls[pollIndex].poll.security.owner.name || !myUser.user.lock)
+  {
         console.log("User with API-KEY not found.");
         res.status(404).json({code: 404, message: 'Poll not found.'});
         return;
-      }
-    });
+  }
 
     // Poll bearbeiten
     if (pollIndex != -1) {
@@ -491,7 +488,6 @@ router.put('/lock/:token', (req, res) => {
       console.error('\nERROR bei PUT /poll/lock/:token\n ', error)
       res.status(404).json({ error: 'Poll not found.' });
     }
-  });
 });
 
 /**### DELETE /poll/lock/:token ###*/

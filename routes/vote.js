@@ -312,30 +312,23 @@ router.post('/lock/:token', (req, res) => {
         const editToken = generateEditToken();
         const editLink = "localhost:8080/poll/" + editToken;
         const tokenParam = req.params.token;
-
-        // Check token
-        if(tokenParam == null) {
-            res.status(405).json({ message: 'Invalid input' });
-            return;
-        }
-
-        //############################# Vote Obj. erstellen###############################################
-        // Request body in variablen abspeichern
         const { owner, choice } = req.body;
 
-        // Check if required fields are provided: owner.name, choice.length
-        if (owner.name == "" || owner.name == null || choice.length < 1) {
+        // Check required fields: tokenParam, owner.name, choice.length
+        if (tokenParam == null || owner.name == "" || owner.name == null || choice.length < 1) {
             console.log("\nError bei POST /vote/lock/:token: Mindestens ein benötigtes Feld wurde nicht geliefert.");
             res.status(405).json({ "code": 405, "message": "Invalid input" });
             return
         }
 
+        // Create User Object
         const user = new User.User(owner.name, owner.lock);
 
+        // Create Vote Object
         const voteChoices = [];
         choice.forEach(choice => {
             if (choice.id == null || choice.worst == null) {
-                console.log("\nERROR: Read VoteChoices failed");
+                console.log("\nError bei POST /vote/lock/: Falsche vote-id oder worst-value geliefert.");
                 res.status(405).json({ "code": 405, "message": "Invalid input" });
                 return;
             } else {
@@ -343,21 +336,18 @@ router.post('/lock/:token', (req, res) => {
                 voteChoices.push(voteChoice);
             }
         });
-
-        // Neues Vote Objekt
         const vote = new Vote(user, voteChoices);
 
-        //############################# Poll lesen ###############################################
+        // Read all Polls
         fs.readFile(pollsFilePath, 'utf8', (err, pollData) => {
             if(err){
                 console.log("\nERROR: Read Polls failed");
                 res.status(404).json({ message: 'Poll not found.' });
                 return;
             }
-
             const polls = JSON.parse(pollData);
 
-            // Polls nach token durchsuchen
+            // Find Poll by Token
             const poll = polls.find(p => p.poll.share.value == tokenParam);
             if (!poll) {
                 console.log("\nERROR: Find Poll failed");
@@ -409,7 +399,7 @@ router.post('/lock/:token', (req, res) => {
                 return;
             }
 
-            //############################# Vote Info Obj. erstellen + Speichern ###############################################
+            // Create VoteInfo Object
             const voteInfo = new VoteInfo(poll,vote, timeStamp);
             const generalVoteObject = new GeneralVoteObject(voteInfo,editToken)
             let voteInfos = [];
@@ -423,7 +413,6 @@ router.post('/lock/:token', (req, res) => {
 
                 // Vote in votes-array hinzufügen
                 if(voteData){
-                    // console.log(voteData);
                     voteInfos = JSON.parse(voteData);
                 }
                 voteInfos.push(generalVoteObject);
@@ -437,15 +426,13 @@ router.post('/lock/:token', (req, res) => {
                     }
                 });
             });
-            //############################# Response erstellen ###############################################
-            //Response:
 
+            // Create and Send Response
             const returnToken = new Token(editLink,editToken);
             const voteResult = new VoteResult(returnToken);
-
             res.status(200).json(voteResult);
+            
         });
-        //############################################################################
 
     } catch (error) {
         console.log("ERROR: Fatal Error");

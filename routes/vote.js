@@ -442,7 +442,7 @@ router.post('/lock/:token', (req, res) => {
 
 
 /** 
- * GET /vote/lock/{token}: Find the vote of the token
+ * GET /vote/lock/:token: Find the vote of the token
  */
 router.get('/lock/:token', (req, res) => {
     try {
@@ -495,51 +495,57 @@ router.get('/lock/:token', (req, res) => {
 
 });
 
-/**### PUT /vote/lock/:token ###*/
-/**Update a vote of the token.**/
-//TODO: API-Key prüfen lassen
+
+/**
+ * PUT /vote/lock/:token: Update a vote of the token.
+ */
 router.put('/lock/:token', (req, res) => {
 
-    // Token holen
+    const apiKey = req.header("API-KEY")
     const editToken = req.params.token;
-
-    // Request body in variablen abspeichern
     const { owner, choice } = req.body;
 
-    // Check token
-    if(editToken == null) {
-        console.error('ERROR bei PUT /poll/lack/:token: Kein Token geliefert.');
-        res.status(404).json({ message: 'Poll not found.' });
-        return;
+    // Check required fields: apiKey, editToken, owner.name
+    if (apiKey == "" || apiKey == null || editToken == "" || editToken == null || owner.name == "" || owner.name == null) {
+        console.log("\nError bei PUT /vote/lock/:token: Mindestens ein benötigtes Feld wurde nicht geliefert.");
+        res.status(404).json({ "code": 404, "message": "Poll not found." });
+        return
     }
 
-    // voteInfos lesen
+    // Read All Votes
     fs.readFile(votesFilePath, 'utf8', (err, data) => {
         if (err) {
-            console.error('Fehler beim Lesen der Datei:', err);
+            console.error('\nFehler beim Lesen der Datei:', err);
             res.status(404).json({ message: 'Poll not found.' });
             return;
         }
+        const votes = JSON.parse(data);
 
-        const voteObjs = JSON.parse(data);
+        // Find Vote and Index
+        let vote = votes.find(v => v.editToken == editToken)
+        let voteIndex = votes.findIndex(v => v.editToken == editToken);
 
-        // voteObj nach token durchsuchen
-        let voteIndex = voteObjs.findIndex(p => p.editToken == editToken);
+        // Check maximum Votes
+        if (choice.length > vote.voteInfo.poll.poll.body.setting.voices) {
+            console.log("\nError bei PUT /vote/lock/:token: Maximal " + vote.voteInfo.poll.poll.body.setting.voices + " Stimme(n) erlaubt.");
+            res.status(404).json({ "code": 404, "message": "Poll not found." });
+            return
+        }
 
         // vote bearbeiten
         if (voteIndex != -1) {
-            voteObjs[voteIndex].voteInfo.vote.choice = choice
-            voteObjs[voteIndex].voteInfo.vote.owner = owner
+            votes[voteIndex].voteInfo.vote.choice = choice
+            votes[voteIndex].voteInfo.vote.owner = owner
 
         } else {
-            console.error('Fehler beim Bearbeiten des Polls: ', err)
+            console.error('\nFehler beim Bearbeiten des Polls: ', err)
             res.status(404).json({ code: 404, message: 'Poll not found.' });
             return;
         }
 
         try {
 
-            fs.writeFileSync(votesFilePath, JSON.stringify(voteObjs, null, 2), 'utf8');
+            fs.writeFileSync(votesFilePath, JSON.stringify(votes, null, 2), 'utf8');
             res.json({ "code": 200, message: "i. O." });
 
         } catch (err) {

@@ -192,7 +192,7 @@ router.get('/lack/:token', (req, res) => {
         options.push(statisticOption)
       })
       
-      const statistic = new Statistics(poll, participants, options)
+      const statistic = new Statistics(poll.poll, participants, options)
 
       res.json(statistic);
     
@@ -326,7 +326,6 @@ router.delete('/lack/:token', (req, res) => {
 router.post('/lock', async (req, res) => {
   try {
     const apiKey = req.header("API-KEY");
-    console.log(req.body);
     // Request body in variablen abspeichern
     const {title, description, options, setting, fixed, owner, users, visibility} = req.body;
 
@@ -411,134 +410,91 @@ router.post('/lock', async (req, res) => {
 /**Return the statistics of the poll by share token.**/
 //TODO: API-Key prüfen lassen
 //TODO: implement new GET lock method as in lack
-router.get('/lock/:token', (req, res) => {
-  const token = req.params.token;
+router.get('/lock/:token', async(req, res) => {
 
-  // Check token
-  if (token == ':token' || token == null) {
-    console.error('Fehler beim Lesen der Datei:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
+  const token = req.params.token;
+  const apiKey = req.header("API-KEY");
+
+  // Check required fields: Share-Token
+  if (token == "" || token == ':token' || token == null) {
+    console.error('\nError bei GET /poll/lack: Token wurde nicht geliefert.', err);
+    res.status(404).json({ error: "Poll not found." });
     return;
   }
 
-  // Polls lesen
-  fs.readFile(pollsFilePath, 'utf8', (err, pollData) => {
-    if (err) {
-      console.error('Fehler beim Lesen der Datei:', err);
-      res.status(500).json({ error: 'Internal Server Error' });
-      return;
+  //Security Check
+  const usersData = await fs.promises.readFile(usersFilePath, 'utf8');
+  const usersJson = JSON.parse(usersData);
+
+  // Users nach token durchsuchen
+  const myUser = usersJson.find(u => u.apiKey == apiKey);
+
+  if (myUser == null) {
+    console.log("User with API-KEY not found. 1");
+    return res.status(404).json({"code": 404, "message": "Poll not found."});
+  }else{
+    if (!myUser.user.lock) {
+      console.log("User with API-KEY not found. 2");
+      return res.status(404).json({"code": 404, "message": "Poll not found."});
     }
-    if (!pollData) {
+  }
+
+  // Read All Polls
+  const polls = await fs.promises.readFile(pollsFilePath, 'utf8');
+  const pollsJson = JSON.parse(polls);
+
+    // Find Poll by Share-Token
+    const poll = pollsJson.find(p => p.poll.share.value == token);
+    if (!poll) {
+      console.error('\nError bei GET /poll/lack: Poll nicht gefunden.', err);
       res.status(404).json({ code: 404, error: 'Poll not found.' });
       return;
     }
-    const polls = JSON.parse(pollData);
 
-    // Polls nach token durchsuchen
-    const poll = polls.find((p) => p.poll.share.value == token);
-    if (poll == null) {
-      res.status(404).json({ code: 404, error: 'Poll not found.' });
-      return;
-    }
-    fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
-      if (err) {
-        console.error('Fehler beim Lesen der Datei:', err);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-      if (voteData) {
-        const voteInfos = JSON.parse(voteData);
+    // Read All Votes
+    const votes = await fs.promises.readFile(votesFilePath, 'utf8');
+    const votesJson = JSON.parse(votes)
 
-        const voteParticipants = [];
-        const optionArray = [];
-
-        // Arrays initial füllen
-        const eineVoteInfo = voteInfos.find(
-            (p) => p.voteInfo.poll.poll.share.value == token
-        );
-
-        if (eineVoteInfo == null) {
-          console.log('keine Votes gefunden');
-          const statisticOptions = poll.poll.body.options.map((option) => {
-            return new StatisticsOption([], []);
-          });
-          const statistic = new Statistics(
-              poll.poll,
-              [],
-              statisticOptions
-          );
-          res.json(statistic);
-          return;
-        } else {
-          if (eineVoteInfo.voteInfo.poll.poll.share.value == token) {
-            for (let i = 0; i < eineVoteInfo.voteInfo.poll.poll.body.options.length; i++) {
-              optionArray.push(new StatisticsOption([], []));
-            }
-          }
+      // Set participants array
+      const participants = []
+      votesJson.forEach(vote => {
+        if (vote.voteInfo.poll.poll.share.value == poll.poll.share.value) {
+          const participant = vote.voteInfo.vote.owner
+          participants.push(participant)
         }
+      })
 
-        // Teilnehmer basierend auf gefundenen Benutzern aktualisieren
-        voteInfos.forEach((voteInfo) => {
-          if (voteInfo == null) {
-            console.log('keine Votes gefunden');
-            return;
-          } else {
-            if (voteInfo.voteInfo.poll.poll.share.value == token) {
-              for (let i = 0; i < voteInfo.voteInfo.poll.poll.body.options.length; i++) {
-                optionArray[i].voted = [];
-                optionArray[i].worst = [];
-              }
-              for (let i = 0; i < voteInfo.voteInfo.vote.choice.length; i++) {
-                const participant = voteInfo.voteInfo.vote.choice[i].owner;
-                for (let j = 0; j < voteInfo.voteInfo.poll.poll.body.options.length; j++) {
-                  if (voteInfo.voteInfo.poll.poll.body.options[j].id == voteInfo.voteInfo.vote.choice[i].id) {
-                    optionArray[j].voted.push(participant);
-                    if (voteInfo.voteInfo.vote.choice[i].worst == true) {
-                      optionArray[j].worst.push(participant);
-                    }
-                    break;
-                  }
-                }
-                if (!voteParticipants.includes(participant)) {
-                  voteParticipants.push(participant);
+      const options = []
+      let index = 0
+
+      poll.poll.body.options.forEach(opt => {
+        const voted = []
+        const worst = []
+
+        votes.forEach(vote => {
+          if (vote.voteInfo.poll.poll.share.value == poll.poll.share.value) {
+            vote.voteInfo.vote.choice.forEach(choice => {
+              // Set voted array
+              if (opt.id == choice.id) {
+                voted.push(participants.indexOf(vote.voteInfo.vote.owner))
+                // Set worst array
+                if (choice.worst) {
+                  worst.push(participants.indexOf(vote.voteInfo.vote.owner))
                 }
               }
-            }
+
+            })
+
+            index++
           }
-        });
+        })
+        const statisticOption = new StatisticsOption(voted, worst)
+        options.push(statisticOption)
+      })
 
-        // Überprüfen, ob die Anzahl der Teilnehmer korrekt ist
-        if (voteParticipants.length !== poll.poll.participants.length) {
-          console.log('Fehler: Die Anzahl der Teilnehmer stimmt nicht überein.');
-          res.status(500).json({ error: 'Internal Server Error' });
-          return;
-        }
+      const statistic = new Statistics(poll.poll, participants, options)
 
-        const statistic = new Statistics(
-            poll.poll,
-            voteParticipants.map((participant) => {
-              return { name: participant, lock: null };
-            }),
-            optionArray
-        );
-        res.json(statistic);
-        if (!statistic) {
-          res.status(404).json({ code: 404, error: 'Poll not found.' });
-          return;
-        }
-      } else {
-        const statisticOptions = poll.poll.body.options.map((option) => {
-          return new StatisticsOption([], []);
-        });
-        const statistic = new Statistics(
-            poll.poll,
-            [],
-            statisticOptions
-        );
-        res.json(statistic);
-      }
-    });
-  });
+      res.json(statistic);
 });
 
 /**### PUT /poll/lock/:token ###*/

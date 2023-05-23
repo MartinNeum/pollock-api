@@ -22,19 +22,22 @@ const { promisify } = require('util');
 /**### POST /poll/lack ###*/
 /**Add a new poll.**/
 router.post('/lack', (req, res) => {
+  console.log(req.body);
   try {
     // Request body in variablen abspeichern
     const { title, description, options, setting, fixed } = req.body;
     
-    if (title == "" || title == null || options == null || options.length < 3) {
+    if (title == "" || title == null || options == null || options.length < 2) {
       console.error('\nERROR bei POST /poll/lack:\n Die benötigten Felder Title oder Options sind fehlehaft.')
       res.status(405).json({ "code": 405, "message": "Invalid input" })
       return
     }
 
     // PollBody erstellen
-    const pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline)
-
+    let pollSetting = null;
+    if(setting != null) {
+          pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline)
+        }
     const pollOptions = []
     options.forEach(option => {
       if (option.id == null || option.text == null) {
@@ -368,19 +371,23 @@ router.post('/lock', async (req, res) => {
 
     // Polls nach token durchsuchen
     const myUser = usersJson.find(u => u.apiKey === apiKey);
-
+    //console.log(myUser.user.name);
+   // console.log(owner.name);
     if (myUser == null) {
       console.log("User with API-KEY not found.");
       return res.status(405).json({"code": 405, "message": "Invalid input"});
     }else{
-    if (myUser.user.name !== owner.name || !myUser.user.lock) {
+    if (!myUser.user.lock) {
       console.log("User with API-KEY not found.");
       return res.status(405).json({"code": 405, "message": "Invalid input"});
     }
   }
 
     // PollBody erstellen
-    const pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline);
+    let pollSetting = null;
+    if(setting != null) {
+      pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline)
+    }
 
     const pollOptions = [];
     for (const option of options) {

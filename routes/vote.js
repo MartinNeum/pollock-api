@@ -69,13 +69,13 @@ router.post('/lack/:token', (req, res) => {
                 res.status(404).json({ code: 404, message: 'Poll not found.' });
                 return;
             }
-            if (poll.poll.body.setting.deadline < timeStamp)
-            {
-                console.log("ERROR: Deadline ended");
-                res.status(410).json({ code: 410, message: 'Poll is gone.' });
-                return;
+            if(poll.poll.body.setting != null) {
+                if (poll.poll.body.setting.deadline < timeStamp) {
+                    console.log("ERROR: Deadline ended");
+                    res.status(410).json({code: 410, message: 'Poll is gone.'});
+                    return;
+                }
             }
-
             //############################# Vote Info Obj. erstellen + Speichern ###############################################
             const voteInfo = new VoteInfo(poll,vote, timeStamp);
             const generalVoteObject = new GeneralVoteObject(voteInfo,editToken)
@@ -155,10 +155,12 @@ router.get('/lack/:token', (req, res) => {
                     if (voteObj.editToken == editToken) {
                         // Verfügbarkeit der Poll prüfen
                         const timeStamp = generateTimestamp();
-                        if (voteObj.voteInfo.poll.poll.body.setting.deadline < timeStamp) {
-                            console.log("ERROR: Deadline ended");
-                            res.status(410).json({code: 410, message: 'Poll is gone.'});
-                            return;
+                        if(voteObj.voteInfo.poll.poll.body.setting != null) {
+                            if (voteObj.voteInfo.poll.poll.body.setting.deadline < timeStamp) {
+                                console.log("ERROR: Deadline ended");
+                                res.status(410).json({code: 410, message: 'Poll is gone.'});
+                                return;
+                            }
                         }
                         vote = voteObj;
                     }
@@ -392,11 +394,12 @@ router.post('/lock/:token', (req, res) => {
             }
 
             // Check if Poll is alive
-            if (poll.poll.body.setting.deadline < timeStamp)
-            {
-                console.log("\nERROR: Deadline ended");
-                res.status(410).json({ code: 410, message: 'Poll is gone.' });
-                return;
+            if(poll.poll.body.setting != null) {
+                if (poll.poll.body.setting.deadline < timeStamp) {
+                    console.log("\nERROR: Deadline ended");
+                    res.status(410).json({code: 410, message: 'Poll is gone.'});
+                    return;
+                }
             }
 
             // Create VoteInfo Object
@@ -476,10 +479,12 @@ router.get('/lock/:token', (req, res) => {
 
             // Check Vote Timestamp
             const timeStamp = generateTimestamp();
-            if (vote.voteInfo.poll.poll.body.setting.deadline < timeStamp) {
-                console.log("\nError bei GET /vote/lock/:token: Vote Frist ist bereits abgelaufen.");
-                res.status(410).json({code: 410, message: 'Poll is gone.'});
-                return
+            if(vote.voteInfo.poll.poll.body.setting != null) {
+                if (vote.voteInfo.poll.poll.body.setting.deadline < timeStamp) {
+                    console.log("\nError bei GET /vote/lock/:token: Vote Frist ist bereits abgelaufen.");
+                    res.status(410).json({code: 410, message: 'Poll is gone.'});
+                    return
+                }
             }
 
             // Create and Send Response

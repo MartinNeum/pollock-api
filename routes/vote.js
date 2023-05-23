@@ -76,6 +76,14 @@ router.post('/lack/:token', (req, res) => {
                     return;
                 }
             }
+
+            // Check maximum Votes
+            if (choice.length > poll.poll.body.setting.voices) {
+                console.log("\nError bei POST /vote/lock/:token: Maximal " + poll.poll.body.setting.voices + " Stimme(n) erlaubt.");
+                res.status(405).json({ "code": 405, "message": "Invalid input" });
+                return
+            }
+            
             //############################# Vote Info Obj. erstellen + Speichern ###############################################
             const voteInfo = new VoteInfo(poll,vote, timeStamp);
             const generalVoteObject = new GeneralVoteObject(voteInfo,editToken)

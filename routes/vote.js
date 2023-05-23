@@ -296,19 +296,21 @@ router.delete('/lack/:token', (req, res) => {
 
 
 
-/**********************************LOCK ENDPOINTS****+++++++++++++++++++++++++++++++++*********/
+/******************************************************************************************************************************/
+/************************************************  /vote/lock ENDPOINTS  ******************************************************/
+/******************************************************************************************************************************/
+
+
 /**
- POST /vote/lock/{token}
- Add a new vote to the poll
- **/
-//TODO User nur einmal abstimmen lassen
+ * POST /vote/lock/{token} Add a new vote to the poll
+ */
 router.post('/lock/:token', (req, res) => {
     try {
+
         const apiKey = req.header("API-KEY")
         const timeStamp = generateTimestamp();
         const editToken = generateEditToken();
         const editLink = "localhost:8080/poll/" + editToken;
-
         const tokenParam = req.params.token;
 
         // Check token
@@ -321,12 +323,19 @@ router.post('/lock/:token', (req, res) => {
         // Request body in variablen abspeichern
         const { owner, choice } = req.body;
 
+        // Check if required fields are provided: owner.name, choice.length
+        if (owner.name == "" || owner.name == null || choice.length < 1) {
+            console.log("\nError bei POST /vote/lock/:token: Mindestens ein benötigtes Feld wurde nicht geliefert.");
+            res.status(405).json({ "code": 405, "message": "Invalid input" });
+            return
+        }
+
         const user = new User.User(owner.name, owner.lock);
 
         const voteChoices = [];
         choice.forEach(choice => {
             if (choice.id == null || choice.worst == null) {
-                console.log("ERROR: Read VoteChoices failed");
+                console.log("\nERROR: Read VoteChoices failed");
                 res.status(405).json({ "code": 405, "message": "Invalid input" });
                 return;
             } else {
@@ -337,10 +346,11 @@ router.post('/lock/:token', (req, res) => {
 
         // Neues Vote Objekt
         const vote = new Vote(user, voteChoices);
+
         //############################# Poll lesen ###############################################
         fs.readFile(pollsFilePath, 'utf8', (err, pollData) => {
             if(err){
-                console.log("ERROR: Read Polls failed");
+                console.log("\nERROR: Read Polls failed");
                 res.status(404).json({ message: 'Poll not found.' });
                 return;
             }
@@ -350,9 +360,16 @@ router.post('/lock/:token', (req, res) => {
             // Polls nach token durchsuchen
             const poll = polls.find(p => p.poll.share.value == tokenParam);
             if (!poll) {
-                console.log("ERROR: Find Poll failed");
+                console.log("\nERROR: Find Poll failed");
                 res.status(404).json({ code: 404, message: 'Poll not found.' });
                 return;
+            }
+
+            // Check maximum Votes
+            if (choice.length > poll.poll.body.setting.voices) {
+                console.log("\nError bei POST /vote/lock/:token: Maximal " + poll.poll.body.setting.voices + " Stimme(n) erlaubt.");
+                res.status(405).json({ "code": 405, "message": "Invalid input" });
+                return
             }
 
             // Check Security Permissions
@@ -364,7 +381,7 @@ router.post('/lock/:token', (req, res) => {
                 {
                     fs.readFile(usersFilePath, 'utf8', (err, userData) => {
                         if (err) {
-                            console.log("ERROR: Read Polls failed");
+                            console.log("\nERROR: Read Polls failed");
                             res.status(404).json({message: 'Poll not found.'});
                             return;
                         }
@@ -387,7 +404,7 @@ router.post('/lock/:token', (req, res) => {
             // Check if Poll is alive
             if (poll.poll.body.setting.deadline < timeStamp)
             {
-                console.log("ERROR: Deadline ended");
+                console.log("\nERROR: Deadline ended");
                 res.status(410).json({ code: 410, message: 'Poll is gone.' });
                 return;
             }
@@ -399,7 +416,7 @@ router.post('/lock/:token', (req, res) => {
 
             fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
                 if (err) {
-                    console.log("ERROR: Read Votes failed");
+                    console.log("\nERROR: Read Votes failed");
                     res.status(404).json({ message: 'Poll not found.' });
                     return;
                 }
@@ -414,7 +431,7 @@ router.post('/lock/:token', (req, res) => {
                 // Votes in .json abspeichern
                 fs.writeFile(votesFilePath, JSON.stringify(voteInfos), 'utf8', (err) => {
                     if (err) {
-                        console.log("ERROR: Write PollInfo failed");
+                        console.log("\nERROR: Write PollInfo failed");
                         res.status(404).json({ message: 'Poll not found.' });
                         return;
                     }

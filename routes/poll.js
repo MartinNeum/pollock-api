@@ -496,59 +496,46 @@ router.put('/lock/:token', async (req, res) => {
     }
 });
 
-/**### DELETE /poll/lock/:token ###*/
-/**Deletes a poll by admin token.**/
-//TODO: API-Key prüfen lassen
+
+/**
+ * DELETE /poll/lock/:token: Deletes a poll by admin token.
+ */
 router.delete('/lock/:token', (req, res) => {
 
-  // Token holen
   const token = req.params.token;
+  const apiKey = req.header("API-KEY")
 
-  // Check token
-  if(token == null) {
-    console.error('ERROR bei DELETE /poll/lock/:token: Kein Token geliefert.');
+  // Check required fields: apiKey, adminToken
+  if (apiKey == "" || apiKey == null || token == "" || token == null) {
+    console.error('\nERROR bei DELETE /poll/lock/:token: Kein Token geliefert.');
     res.status(400).json({ error: 'Invalid poll admin token.' });
     return;
   }
 
-  // Polls lesen
+  // Read All Polls
   fs.readFile(pollsFilePath, 'utf8', (err, data) => {
     if (err) {
       console.error('Fehler beim Lesen der Datei:', err);
       res.status(404).json({ error: 'Poll not found.' });
       return;
     }
-
     const polls = JSON.parse(data);
 
-    // Polls nach token durchsuchen
-    const updatedPolls = [];
-
-    polls.forEach(poll => {
-      if (poll == null) {
-        res.status(405).json({"code": 400, "message": "Invalid poll admin token."});
-        return;
-      } else {
-        if (poll.adminToken != token) {
-          updatedPolls.push(poll);
-        }
-      }
-    });
-
-    try {
-      if (updatedPolls.length < polls.length) {
-        fs.writeFileSync(pollsFilePath, JSON.stringify(updatedPolls, null, 2), 'utf8');
-        res.json({ "code": 200, "message": "i. O." });
-      } else {
-        console.error('\nERROR bei DELETE /poll/lock/:token: Schreiben des neuen Arrays schlug fehl.');
-        console.error('\nAdmin Token prüfen.');
-        res.status(400).json({ error: 'Invalid poll admin token.' });
-      }
-
-    } catch (err) {
-      console.error('\nERROR bei DELETE /poll/lock/:token:\n', err);
-      res.status(404).json({ error: 'Poll not found.' });
+    // Find Poll by Admin-Token
+    const pollIndex = polls.findIndex(p => p.adminToken == token)
+    if (pollIndex == -1) {
+      console.error('\nError bei DELETE /poll/lock/:token: Poll nicht gefunden');
+      res.status(400).json({code: 400, message: 'Invalid poll admin token.' });
+      return;
     }
+
+    // Remove Poll and update .json
+    polls.splice(pollIndex, 1)
+    fs.writeFileSync(pollsFilePath, JSON.stringify(polls, null, 2), 'utf8');
+
+    // Send Response
+    res.json({ "code": 200, "message": "i. O." });
+
   });
 });
 

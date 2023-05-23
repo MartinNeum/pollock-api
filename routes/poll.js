@@ -25,6 +25,12 @@ router.post('/lack', (req, res) => {
   try {
     // Request body in variablen abspeichern
     const { title, description, options, setting, fixed } = req.body;
+    
+    if (title == "" || title == null || options == null || options.length < 3) {
+      console.error('\nERROR bei POST /poll/lack:\n Die benötigten Felder Title oder Options sind fehlehaft.')
+      res.status(405).json({ "code": 405, "message": "Invalid input" })
+      return
+    }
 
     // PollBody erstellen
     const pollSetting = new Poll.PollSetting(setting.voices, setting.worst, setting.deadline)

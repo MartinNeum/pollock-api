@@ -296,37 +296,39 @@ router.delete('/lack/:token', (req, res) => {
 
 
 
-/**********************************LOCK ENDPOINTS****+++++++++++++++++++++++++++++++++*********/
+/******************************************************************************************************************************/
+/************************************************  /vote/lock ENDPOINTS  ******************************************************/
+/******************************************************************************************************************************/
+
+
 /**
- POST /vote/lock/{token}
- Add a new vote to the poll
- **/
-//TODO User nur einmal abstimmen lassen
+ * POST /vote/lock/{token} Add a new vote to the poll
+ */
 router.post('/lock/:token', (req, res) => {
     try {
+
         const apiKey = req.header("API-KEY")
         const timeStamp = generateTimestamp();
         const editToken = generateEditToken();
         const editLink = "localhost:8080/poll/" + editToken;
-
         const tokenParam = req.params.token;
-
-        // Check token
-        if(tokenParam == null) {
-            res.status(405).json({ message: 'Invalid input' });
-            return;
-        }
-
-        //############################# Vote Obj. erstellen###############################################
-        // Request body in variablen abspeichern
         const { owner, choice } = req.body;
 
+        // Check required fields: apiKey, tokenParam, owner.name, choice.length
+        if (apiKey == null || apiKey == "" || tokenParam == null || owner.name == "" || owner.name == null || choice.length < 1) {
+            console.log("\nError bei POST /vote/lock/:token: Mindestens ein benötigtes Feld wurde nicht geliefert.");
+            res.status(405).json({ "code": 405, "message": "Invalid input" });
+            return
+        }
+
+        // Create User Object
         const user = new User.User(owner.name, owner.lock);
 
+        // Create Vote Object
         const voteChoices = [];
         choice.forEach(choice => {
             if (choice.id == null || choice.worst == null) {
-                console.log("ERROR: Read VoteChoices failed");
+                console.log("\nError bei POST /vote/lock/: Falsche vote-id oder worst-value geliefert.");
                 res.status(405).json({ "code": 405, "message": "Invalid input" });
                 return;
             } else {
@@ -334,25 +336,30 @@ router.post('/lock/:token', (req, res) => {
                 voteChoices.push(voteChoice);
             }
         });
-
-        // Neues Vote Objekt
         const vote = new Vote(user, voteChoices);
-        //############################# Poll lesen ###############################################
+
+        // Read all Polls
         fs.readFile(pollsFilePath, 'utf8', (err, pollData) => {
             if(err){
-                console.log("ERROR: Read Polls failed");
+                console.log("\nERROR: Read Polls failed");
                 res.status(404).json({ message: 'Poll not found.' });
                 return;
             }
-
             const polls = JSON.parse(pollData);
 
-            // Polls nach token durchsuchen
+            // Find Poll by Token
             const poll = polls.find(p => p.poll.share.value == tokenParam);
             if (!poll) {
-                console.log("ERROR: Find Poll failed");
+                console.log("\nERROR: Find Poll failed");
                 res.status(404).json({ code: 404, message: 'Poll not found.' });
                 return;
+            }
+
+            // Check maximum Votes
+            if (choice.length > poll.poll.body.setting.voices) {
+                console.log("\nError bei POST /vote/lock/:token: Maximal " + poll.poll.body.setting.voices + " Stimme(n) erlaubt.");
+                res.status(405).json({ "code": 405, "message": "Invalid input" });
+                return
             }
 
             // Check Security Permissions
@@ -364,7 +371,7 @@ router.post('/lock/:token', (req, res) => {
                 {
                     fs.readFile(usersFilePath, 'utf8', (err, userData) => {
                         if (err) {
-                            console.log("ERROR: Read Polls failed");
+                            console.log("\nERROR: Read Polls failed");
                             res.status(404).json({message: 'Poll not found.'});
                             return;
                         }
@@ -387,26 +394,25 @@ router.post('/lock/:token', (req, res) => {
             // Check if Poll is alive
             if (poll.poll.body.setting.deadline < timeStamp)
             {
-                console.log("ERROR: Deadline ended");
+                console.log("\nERROR: Deadline ended");
                 res.status(410).json({ code: 410, message: 'Poll is gone.' });
                 return;
             }
 
-            //############################# Vote Info Obj. erstellen + Speichern ###############################################
+            // Create VoteInfo Object
             const voteInfo = new VoteInfo(poll,vote, timeStamp);
             const generalVoteObject = new GeneralVoteObject(voteInfo,editToken)
             let voteInfos = [];
 
             fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
                 if (err) {
-                    console.log("ERROR: Read Votes failed");
+                    console.log("\nERROR: Read Votes failed");
                     res.status(404).json({ message: 'Poll not found.' });
                     return;
                 }
 
                 // Vote in votes-array hinzufügen
                 if(voteData){
-                    // console.log(voteData);
                     voteInfos = JSON.parse(voteData);
                 }
                 voteInfos.push(generalVoteObject);
@@ -414,21 +420,19 @@ router.post('/lock/:token', (req, res) => {
                 // Votes in .json abspeichern
                 fs.writeFile(votesFilePath, JSON.stringify(voteInfos), 'utf8', (err) => {
                     if (err) {
-                        console.log("ERROR: Write PollInfo failed");
+                        console.log("\nERROR: Write PollInfo failed");
                         res.status(404).json({ message: 'Poll not found.' });
                         return;
                     }
                 });
             });
-            //############################# Response erstellen ###############################################
-            //Response:
 
+            // Create and Send Response
             const returnToken = new Token(editLink,editToken);
             const voteResult = new VoteResult(returnToken);
-
             res.status(200).json(voteResult);
+
         });
-        //############################################################################
 
     } catch (error) {
         console.log("ERROR: Fatal Error");
@@ -436,60 +440,52 @@ router.post('/lock/:token', (req, res) => {
     }
 });
 
-/**
- GET /vote/lock/{token}
- Find the vote of the token
- **/
-//TODO: API-Key prüfen lassen
+
+/** 
+ * GET /vote/lock/:token: Find the vote of the token
+ */
 router.get('/lock/:token', (req, res) => {
     try {
-        const editToken = req.params.token;
 
-        // Check token
-        if(editToken == null) {
-            res.status(405).json({ message: 'Invalid input' });
-            return;
+        const editToken = req.params.token;
+        const apiKey = req.header("API-KEY")
+
+        // Check required fields: apiKey, editToken
+        if (apiKey == "" || apiKey == null || editToken == "" || editToken == null) {
+            console.log("\nError bei GET /vote/lock/:token: Mindestens ein benötigtes Feld wurde nicht geliefert.");
+            res.status(405).json({ "code": 405, "message": "Invalid input" });
+            return
         }
-        //############################# Vote lesen ###############################################
+
+        // Read All Votes
         fs.readFile(votesFilePath, 'utf8', (err, data) => {
             if (err) {
-                console.log("ERROR: Read Polls failed");
+                console.log("\nERROR: Read Polls failed");
                 res.status(404).json({message: 'Poll not found.'});
                 return;
             }
+            const votes = JSON.parse(data);
 
-            const voteObjs = JSON.parse(data);
-            // console.log(voteInfos);
-            let vote = null;
-            // Votes nach token durchsuchen
-            voteObjs.forEach(voteObj => {
-                if (voteObj == null) {
-                    console.log("ERROR: Read VoteInfos failed");
-                    res.status(405).json({"code": 405, "message": "Invalid input"});
-                    return;
-                } else {
-                    if (voteObj.editToken == editToken) {
-                        // Verfügbarkeit der Poll prüfen
-                        const timeStamp = generateTimestamp();
-                        if (voteObj.voteInfo.poll.poll.body.setting.deadline < timeStamp) {
-                            console.log("ERROR: Deadline ended");
-                            res.status(410).json({code: 410, message: 'Poll is gone.'});
-                            return;
-                        }
-                        vote = voteObj;
-                    }
-
-                }
-            });
-            //############################# Response erstellen ###############################################
-            if (vote == null) {
-                console.log("ERROR: False Edit Token");
-                res.status(404).json({message: 'Poll not found.'});
-            } else {
-
-                const respVoteInfo = new VoteInfo(vote.voteInfo.poll.poll, vote.voteInfo.vote, vote.voteInfo.time)
-                res.status(200).json(respVoteInfo);
+            // Find Vote by Edit-Token
+            const vote = votes.find(v => v.editToken == editToken)
+            if (!vote) {
+                console.log("\nError bei GET /vote/lock/:token: Vote nicht gefunden.");
+                res.status(405).json({ "code": 405, "message": "Invalid input" });
+                return
             }
+
+            // Check Vote Timestamp
+            const timeStamp = generateTimestamp();
+            if (vote.voteInfo.poll.poll.body.setting.deadline < timeStamp) {
+                console.log("\nError bei GET /vote/lock/:token: Vote Frist ist bereits abgelaufen.");
+                res.status(410).json({code: 410, message: 'Poll is gone.'});
+                return
+            }
+
+            // Create and Send Response
+            const respVoteInfo = new VoteInfo(vote.voteInfo.poll.poll, vote.voteInfo.vote, vote.voteInfo.time)
+            res.status(200).json(respVoteInfo);
+
         });
 
     } catch (error) {
@@ -499,51 +495,57 @@ router.get('/lock/:token', (req, res) => {
 
 });
 
-/**### PUT /vote/lock/:token ###*/
-/**Update a vote of the token.**/
-//TODO: API-Key prüfen lassen
+
+/**
+ * PUT /vote/lock/:token: Update a vote of the token.
+ */
 router.put('/lock/:token', (req, res) => {
 
-    // Token holen
+    const apiKey = req.header("API-KEY")
     const editToken = req.params.token;
-
-    // Request body in variablen abspeichern
     const { owner, choice } = req.body;
 
-    // Check token
-    if(editToken == null) {
-        console.error('ERROR bei PUT /poll/lack/:token: Kein Token geliefert.');
-        res.status(404).json({ message: 'Poll not found.' });
-        return;
+    // Check required fields: apiKey, editToken, owner.name
+    if (apiKey == "" || apiKey == null || editToken == "" || editToken == null || owner.name == "" || owner.name == null) {
+        console.log("\nError bei PUT /vote/lock/:token: Mindestens ein benötigtes Feld wurde nicht geliefert.");
+        res.status(404).json({ "code": 404, "message": "Poll not found." });
+        return
     }
 
-    // voteInfos lesen
+    // Read All Votes
     fs.readFile(votesFilePath, 'utf8', (err, data) => {
         if (err) {
-            console.error('Fehler beim Lesen der Datei:', err);
+            console.error('\nFehler beim Lesen der Datei:', err);
             res.status(404).json({ message: 'Poll not found.' });
             return;
         }
+        const votes = JSON.parse(data);
 
-        const voteObjs = JSON.parse(data);
+        // Find Vote and Index
+        let vote = votes.find(v => v.editToken == editToken)
+        let voteIndex = votes.findIndex(v => v.editToken == editToken);
 
-        // voteObj nach token durchsuchen
-        let voteIndex = voteObjs.findIndex(p => p.editToken == editToken);
+        // Check maximum Votes
+        if (choice.length > vote.voteInfo.poll.poll.body.setting.voices) {
+            console.log("\nError bei PUT /vote/lock/:token: Maximal " + vote.voteInfo.poll.poll.body.setting.voices + " Stimme(n) erlaubt.");
+            res.status(404).json({ "code": 404, "message": "Poll not found." });
+            return
+        }
 
         // vote bearbeiten
         if (voteIndex != -1) {
-            voteObjs[voteIndex].voteInfo.vote.choice = choice
-            voteObjs[voteIndex].voteInfo.vote.owner = owner
+            votes[voteIndex].voteInfo.vote.choice = choice
+            votes[voteIndex].voteInfo.vote.owner = owner
 
         } else {
-            console.error('Fehler beim Bearbeiten des Polls: ', err)
+            console.error('\nFehler beim Bearbeiten des Polls: ', err)
             res.status(404).json({ code: 404, message: 'Poll not found.' });
             return;
         }
 
         try {
 
-            fs.writeFileSync(votesFilePath, JSON.stringify(voteObjs, null, 2), 'utf8');
+            fs.writeFileSync(votesFilePath, JSON.stringify(votes, null, 2), 'utf8');
             res.json({ "code": 200, message: "i. O." });
 
         } catch (err) {
@@ -554,55 +556,46 @@ router.put('/lock/:token', (req, res) => {
 });
 
 
-/**### DELETE /vote/lock/:token ###*/
-/**Deletes a vote of a token.**/
-//TODO: API-Key prüfen lassen
+/**
+ * DELETE /vote/lock/:token: Deletes a vote of a token.
+ */
 router.delete('/lock/:token', (req, res) => {
     try {
-        // Token holen
-        const editToken = req.params.token;
 
-        // Check token
-        if(editToken == null) {
-            console.error('ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.');
-            res.status(400).json({code: 404, message: 'Invalid poll admin token.' });
+        const editToken = req.params.token;
+        const apiKey = req.header("API-KEY")
+
+        // Check required fields: apiKey, editToken
+        if (apiKey == "" || apiKey == null || editToken == "" || editToken == null) {
+            console.error('\nERROR bei DELETE /vote/lack/:token: Mindestens ein benötigtes Feld wurde nicht geliefert.');
+            res.status(400).json({code: 400, message: 'Invalid poll admin token.' });
             return;
         }
-        //############################# Vote lesen ###############################################
+
+        // Read All Votes
         fs.readFile(votesFilePath, 'utf8', (err, data) => {
             if (err) {
-                console.log("ERROR: Read Polls failed");
+                console.log("\nERROR: Read Polls failed");
                 res.status(404).json({code: 404, message: 'Poll not found.'});
                 return;
             }
+            const votes = JSON.parse(data);
 
-            const voteObjs = JSON.parse(data);
-            // console.log(voteInfos);
-            const notDelVotes = [];
-            // Votes nach token durchsuchen
-            voteObjs.forEach(voteObj => {
-                if (voteObj == null) {
-                    console.log("ERROR: Read VoteInfos failed");
-                    res.status(404).json({code: 404, message: "Poll not found."});
-                    return;
-                } else {
-                    if (voteObj.editToken != editToken) {
-                        notDelVotes.push(voteObj);
-                    }
-                }
-            });
-            //  console.log(notDelVotes);
-            //############################# Response erstellen ###############################################
-            if (notDelVotes.length < voteObjs.length) {
-                fs.writeFileSync(votesFilePath, JSON.stringify(notDelVotes, null, 2), 'utf8');
-                res.json({ "code": 200, "message": "i. O." });
-            } else {
-                console.error('\nERROR bei DELETE /vote/lack/:token: Schreiben des neuen Arrays schlug fehl.');
-                console.error('\nEdit Token prüfen.');
-                res.status(400).json({ error: 'Invalid poll admin token.' });
+            // Find Vote by Edit-Token
+            const voteIndex = votes.findIndex(v => v.editToken == editToken)
+            if (voteIndex == -1) {
+                console.error('\nERROR bei DELETE /vote/lack/:token: Vote nicht gefunden.');
+                res.status(404).json({code: 404, message: 'Poll not found.' });
+                return;
             }
-            // fs.writeFileSync(votesFilePath, JSON.stringify(notDelVotes, null, 2), 'utf8');
-            // res.json({"code": 200, message: "i. O."});
+
+            // Remove Vote and update .json
+            votes.splice(voteIndex, 1);
+            fs.writeFileSync(votesFilePath, JSON.stringify(votes, null, 2), 'utf8');
+
+            // Send Response
+            res.json({ "code": 200, "message": "i. O." });
+
         });
     } catch (error) {
         console.log("ERROR: Fatal Error");

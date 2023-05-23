@@ -556,55 +556,46 @@ router.put('/lock/:token', (req, res) => {
 });
 
 
-/**### DELETE /vote/lock/:token ###*/
-/**Deletes a vote of a token.**/
-//TODO: API-Key prüfen lassen
+/**
+ * DELETE /vote/lock/:token: Deletes a vote of a token.
+ */
 router.delete('/lock/:token', (req, res) => {
     try {
-        // Token holen
-        const editToken = req.params.token;
 
-        // Check token
-        if(editToken == null) {
-            console.error('ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.');
-            res.status(400).json({code: 404, message: 'Invalid poll admin token.' });
+        const editToken = req.params.token;
+        const apiKey = req.header("API-KEY")
+
+        // Check required fields: apiKey, editToken
+        if (apiKey == "" || apiKey == null || editToken == "" || editToken == null) {
+            console.error('\nERROR bei DELETE /vote/lack/:token: Mindestens ein benötigtes Feld wurde nicht geliefert.');
+            res.status(400).json({code: 400, message: 'Invalid poll admin token.' });
             return;
         }
-        //############################# Vote lesen ###############################################
+
+        // Read All Votes
         fs.readFile(votesFilePath, 'utf8', (err, data) => {
             if (err) {
-                console.log("ERROR: Read Polls failed");
+                console.log("\nERROR: Read Polls failed");
                 res.status(404).json({code: 404, message: 'Poll not found.'});
                 return;
             }
+            const votes = JSON.parse(data);
 
-            const voteObjs = JSON.parse(data);
-            // console.log(voteInfos);
-            const notDelVotes = [];
-            // Votes nach token durchsuchen
-            voteObjs.forEach(voteObj => {
-                if (voteObj == null) {
-                    console.log("ERROR: Read VoteInfos failed");
-                    res.status(404).json({code: 404, message: "Poll not found."});
-                    return;
-                } else {
-                    if (voteObj.editToken != editToken) {
-                        notDelVotes.push(voteObj);
-                    }
-                }
-            });
-            //  console.log(notDelVotes);
-            //############################# Response erstellen ###############################################
-            if (notDelVotes.length < voteObjs.length) {
-                fs.writeFileSync(votesFilePath, JSON.stringify(notDelVotes, null, 2), 'utf8');
-                res.json({ "code": 200, "message": "i. O." });
-            } else {
-                console.error('\nERROR bei DELETE /vote/lack/:token: Schreiben des neuen Arrays schlug fehl.');
-                console.error('\nEdit Token prüfen.');
-                res.status(400).json({ error: 'Invalid poll admin token.' });
+            // Find Vote by Edit-Token
+            const voteIndex = votes.findIndex(v => v.editToken == editToken)
+            if (voteIndex == -1) {
+                console.error('\nERROR bei DELETE /vote/lack/:token: Vote nicht gefunden.');
+                res.status(404).json({code: 404, message: 'Poll not found.' });
+                return;
             }
-            // fs.writeFileSync(votesFilePath, JSON.stringify(notDelVotes, null, 2), 'utf8');
-            // res.json({"code": 200, message: "i. O."});
+
+            // Remove Vote and update .json
+            votes.splice(voteIndex, 1);
+            fs.writeFileSync(votesFilePath, JSON.stringify(votes, null, 2), 'utf8');
+
+            // Send Response
+            res.json({ "code": 200, "message": "i. O." });
+
         });
     } catch (error) {
         console.log("ERROR: Fatal Error");

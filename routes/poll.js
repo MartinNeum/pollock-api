@@ -516,7 +516,7 @@ router.get('/lock/:token', async(req, res) => {
         const voted = []
         const worst = []
 
-        votes.forEach(vote => {
+        votesJson.forEach(vote => {
           if (vote.voteInfo.poll.poll.share.value == poll.poll.share.value) {
             vote.voteInfo.vote.choice.forEach(choice => {
               // Set voted array

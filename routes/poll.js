@@ -226,11 +226,58 @@ router.put('/lack/:token', (req, res) => {
       res.status(404).json({ error: 'Poll not found.' });
       return;
     }
-
     const polls = JSON.parse(data);
 
     // Polls nach token durchsuchen
+    const poll = polls.find(p => p.adminToken == adminToken)
     let pollIndex = polls.findIndex(p => p.adminToken == adminToken);
+
+    // Check voices for change
+    if (poll.poll.body.setting.voices != setting.voices) {
+      
+      // Get all votes
+      fs.readFile(votesFilePath, 'utf8', (err, xyz) => {
+          if (err) {
+            console.error('Fehler beim Lesen der Datei:', err);
+            res.status(404).json({ error: 'Poll not found.' });
+            return;
+          }
+        const votes = JSON.parse(xyz)
+
+        // Delete All votes from Poll
+        const filteredVotes = votes.filter((vote) => {
+          return vote.voteInfo.poll.poll.share.value !== poll.poll.share.value;
+        });
+
+        // Update .json
+        fs.writeFileSync(votesFilePath, JSON.stringify(filteredVotes, null, 2), 'utf8');
+      })
+    }
+
+    // Check Options for change
+    let abbort = false
+    options.forEach(requestOption => {
+      if (!poll.poll.body.options.includes(requestOption) && !abbort){
+        // Get all votes
+        fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
+            if (err) {
+              console.error('Fehler beim Lesen der Datei:', err);
+              res.status(404).json({ error: 'Poll not found.' });
+              return;
+            }
+          const votes = JSON.parse(voteData)
+
+          // Delete All votes from Poll
+          const filteredVotes = votes.filter((vote) => {
+            return vote.voteInfo.poll.poll.share.value !== poll.poll.share.value;
+          });
+
+          // Update .json
+          fs.writeFileSync(votesFilePath, JSON.stringify(filteredVotes, null, 2), 'utf8');
+        })
+        }
+        abbort = true
+    })
 
     // Poll bearbeiten
     if (pollIndex != -1) {

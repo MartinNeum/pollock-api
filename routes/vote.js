@@ -28,7 +28,7 @@ router.post('/lack/:token', (req, res) => {
 
         // Check token
         if(tokenParam == null) {
-            res.status(405).json({ message: 'Invalid input' });
+            res.status(405).json({code: 405, message: 'Invalid input' });
             return;
         }
 
@@ -56,7 +56,7 @@ router.post('/lack/:token', (req, res) => {
         fs.readFile(pollsFilePath, 'utf8', (err, data) => {
             if (err) {
                 console.log("ERROR: Read Polls failed");
-                res.status(404).json({ message: 'Poll not found.' });
+                res.status(404).json({code: 404, message: 'Poll not found.' });
                 return;
             }
 
@@ -92,7 +92,7 @@ router.post('/lack/:token', (req, res) => {
             fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
                 if (err) {
                     console.log("ERROR: Read Votes failed");
-                    res.status(404).json({ message: 'Poll not found.' });
+                    res.status(404).json({code: 404, message: 'Poll not found.' });
                     return;
                 }
 
@@ -107,7 +107,7 @@ router.post('/lack/:token', (req, res) => {
                 fs.writeFile(votesFilePath, JSON.stringify(voteInfos), 'utf8', (err) => {
                     if (err) {
                         console.log("ERROR: Write PollInfo failed");
-                        res.status(404).json({ message: 'Poll not found.' });
+                        res.status(404).json({code: 404, message: 'Poll not found.' });
                         return;
                     }
                 });
@@ -124,7 +124,7 @@ router.post('/lack/:token', (req, res) => {
 
     } catch (error) {
         console.log("ERROR: Fatal Error");
-        res.status(404).json({ message: 'Poll not found.' });
+        res.status(404).json({code: 404, message: 'Poll not found.' });
     }
 });
 
@@ -139,14 +139,14 @@ router.get('/lack/:token', (req, res) => {
 
         // Check token
         if(editToken == null) {
-            res.status(405).json({ message: 'Invalid input' });
+            res.status(405).json({code: 405, message: 'Invalid input' });
             return;
         }
         //############################# Vote lesen ###############################################
         fs.readFile(votesFilePath, 'utf8', (err, data) => {
             if (err) {
                 console.log("ERROR: Read Polls failed");
-                res.status(404).json({message: 'Poll not found.'});
+                res.status(404).json({code: 404, message: 'Poll not found.'});
                 return;
             }
 
@@ -178,7 +178,7 @@ router.get('/lack/:token', (req, res) => {
             //############################# Response erstellen ###############################################
             if (vote == null) {
                 console.log("ERROR: False Edit Token");
-                res.status(404).json({message: 'Poll not found.'});
+                res.status(404).json({code: 404, message: 'Poll not found.'});
             } else {
 
             const respVoteInfo = new VoteInfo(vote.voteInfo.poll.poll, vote.voteInfo.vote, vote.voteInfo.time)
@@ -188,9 +188,8 @@ router.get('/lack/:token', (req, res) => {
 
     } catch (error) {
         console.log("ERROR: Fatal Error");
-        res.status(404).json({ message: 'Poll not found.' });
+        res.status(404).json({code: 404, message: 'Poll not found.' });
     }
-
 });
 
 /**### PUT /vote/lack/:token ###*/
@@ -207,7 +206,7 @@ router.put('/lack/:token', (req, res) => {
     // Check token
     if(editToken == null) {
         console.error('ERROR bei PUT /poll/lack/:token: Kein Token geliefert.');
-        res.status(404).json({ message: 'Poll not found.' });
+        res.status(404).json({code: 404, message: 'Poll not found.' });
         return;
     }
 
@@ -215,7 +214,7 @@ router.put('/lack/:token', (req, res) => {
     fs.readFile(votesFilePath, 'utf8', (err, data) => {
         if (err) {
             console.error('Fehler beim Lesen der Datei:', err);
-            res.status(404).json({ message: 'Poll not found.' });
+            res.status(404).json({code: 404, message: 'Poll not found.' });
             return;
         }
 
@@ -241,7 +240,7 @@ router.put('/lack/:token', (req, res) => {
             res.json({ "code": 200, message: "i. O." });
 
         } catch (err) {
-            res.status(404).json({ message: 'Poll not found.' })
+            res.status(404).json({code: 404, message: 'Poll not found.' })
 
         }
     });
@@ -258,7 +257,7 @@ router.delete('/lack/:token', (req, res) => {
     // Check token
     if(editToken == null) {
         console.error('ERROR bei DELETE /poll/lack/:token: Kein Token geliefert.');
-        res.status(400).json({code: 404, message: 'Invalid poll admin token.' });
+        res.status(400).json({code: 400, message: 'Invalid poll admin token.' });
         return;
     }
     //############################# Vote lesen ###############################################
@@ -292,7 +291,7 @@ router.delete('/lack/:token', (req, res) => {
         } else {
             console.error('\nERROR bei DELETE /vote/lack/:token: Schreiben des neuen Arrays schlug fehl.');
             console.error('\nEdit Token prüfen.');
-            res.status(400).json({ error: 'Invalid poll admin token.' });
+            res.status(400).json({code: 400, error: 'Invalid poll admin token.' });
         }
        // fs.writeFileSync(votesFilePath, JSON.stringify(notDelVotes, null, 2), 'utf8');
        // res.json({"code": 200, message: "i. O."});
@@ -352,7 +351,7 @@ router.post('/lock/:token', (req, res) => {
         fs.readFile(pollsFilePath, 'utf8', (err, pollData) => {
             if(err){
                 console.log("\nERROR: Read Polls failed");
-                res.status(404).json({ message: 'Poll not found.' });
+                res.status(404).json({code: 404, message: 'Poll not found.' });
                 return;
             }
             const polls = JSON.parse(pollData);
@@ -382,7 +381,7 @@ router.post('/lock/:token', (req, res) => {
                     fs.readFile(usersFilePath, 'utf8', (err, userData) => {
                         if (err) {
                             console.log("\nERROR: Read Polls failed");
-                            res.status(404).json({message: 'Poll not found.'});
+                            res.status(404).json({ code: 404,message: 'Poll not found.'});
                             return;
                         }
                         const users = JSON.parse(userData);
@@ -391,7 +390,7 @@ router.post('/lock/:token', (req, res) => {
                     });
                 }
                 else{
-                    res.status(405).json({ message: 'Invalid input' });
+                    res.status(405).json({ code: 405, message: 'Invalid input' });
                     return;
                 }
                 if (!poll.poll.security.users.contains(myUser.user) || myUser.user.lock != "true")
@@ -418,7 +417,7 @@ router.post('/lock/:token', (req, res) => {
             fs.readFile(votesFilePath, 'utf8', (err, voteData) => {
                 if (err) {
                     console.log("\nERROR: Read Votes failed");
-                    res.status(404).json({ message: 'Poll not found.' });
+                    res.status(404).json({  code: 404,message: 'Poll not found.' });
                     return;
                 }
 
@@ -432,7 +431,7 @@ router.post('/lock/:token', (req, res) => {
                 fs.writeFile(votesFilePath, JSON.stringify(voteInfos), 'utf8', (err) => {
                     if (err) {
                         console.log("\nERROR: Write PollInfo failed");
-                        res.status(404).json({ message: 'Poll not found.' });
+                        res.status(404).json({ code: 404, message: 'Poll not found.' });
                         return;
                     }
                 });
@@ -447,7 +446,7 @@ router.post('/lock/:token', (req, res) => {
 
     } catch (error) {
         console.log("ERROR: Fatal Error");
-        res.status(404).json({ message: 'Poll not found.' });
+        res.status(404).json({ code: 404, message: 'Poll not found.' });
     }
 });
 
@@ -472,7 +471,7 @@ router.get('/lock/:token', (req, res) => {
         fs.readFile(votesFilePath, 'utf8', (err, data) => {
             if (err) {
                 console.log("\nERROR: Read Polls failed");
-                res.status(404).json({message: 'Poll not found.'});
+                res.status(404).json({ code: 404,message: 'Poll not found.'});
                 return;
             }
             const votes = JSON.parse(data);
@@ -503,7 +502,7 @@ router.get('/lock/:token', (req, res) => {
 
     } catch (error) {
         console.log("ERROR: Fatal Error");
-        res.status(404).json({ message: 'Poll not found.' });
+        res.status(404).json({ code: 404, message: 'Poll not found.' });
     }
 
 });
@@ -529,7 +528,7 @@ router.put('/lock/:token', (req, res) => {
     fs.readFile(votesFilePath, 'utf8', (err, data) => {
         if (err) {
             console.error('\nFehler beim Lesen der Datei:', err);
-            res.status(404).json({ message: 'Poll not found.' });
+            res.status(404).json({ code: 404, message: 'Poll not found.' });
             return;
         }
         const votes = JSON.parse(data);
